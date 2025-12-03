@@ -35,7 +35,7 @@ interface Job {
     status: ApplicationStatus
     cvUrl: string | null
     coverLetter: string | null
-    createdAt: Date | string
+    createdAt: Date
     user: {
       name: string | null
       email: string
@@ -63,11 +63,21 @@ export default function ManageJobPage() {
         const appsResponse = await fetch(`/api/jobs/${params.id}/applications`)
         const applications = appsResponse.ok ? await appsResponse.json() : []
         
-        // Convert createdAt strings to Date objects
+        // Convert createdAt strings to Date objects - ensure it's always a Date
         const applicationsWithDates = applications.map((app: any) => ({
           ...app,
-          createdAt: app.createdAt ? new Date(app.createdAt) : new Date(),
-        }))
+          createdAt: app.createdAt instanceof Date ? app.createdAt : new Date(app.createdAt || Date.now()),
+        })) as Array<{
+          id: string
+          status: ApplicationStatus
+          cvUrl: string | null
+          coverLetter: string | null
+          createdAt: Date
+          user: {
+            name: string | null
+            email: string
+          }
+        }>
         
         setJob({ ...jobData, applications: applicationsWithDates })
       } catch (error) {
