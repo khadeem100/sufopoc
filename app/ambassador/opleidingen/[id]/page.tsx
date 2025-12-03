@@ -16,6 +16,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { useToast } from "@/hooks/use-toast"
+import { ApplicationStatus } from "@prisma/client"
 
 interface Opleiding {
   id: string
@@ -29,10 +30,10 @@ interface Opleiding {
   createdAt: string
   applications: Array<{
     id: string
-    status: string
+    status: ApplicationStatus
     cvUrl: string | null
     coverLetter: string | null
-    createdAt: string
+    createdAt: Date | string
     user: {
       name: string | null
       email: string
@@ -60,7 +61,13 @@ export default function ManageOpleidingPage() {
         const appsResponse = await fetch(`/api/opleidingen/${params.id}/applications`)
         const applications = appsResponse.ok ? await appsResponse.json() : []
         
-        setOpleiding({ ...opleidingData, applications })
+        // Convert createdAt strings to Date objects
+        const applicationsWithDates = applications.map((app: any) => ({
+          ...app,
+          createdAt: app.createdAt ? new Date(app.createdAt) : new Date(),
+        }))
+        
+        setOpleiding({ ...opleidingData, applications: applicationsWithDates })
       } catch (error) {
         console.error("Error fetching opleiding:", error)
       } finally {

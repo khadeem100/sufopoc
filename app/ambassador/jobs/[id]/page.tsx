@@ -16,6 +16,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { useToast } from "@/hooks/use-toast"
+import { ApplicationStatus } from "@prisma/client"
 
 interface Job {
   id: string
@@ -31,10 +32,10 @@ interface Job {
   createdAt: string
   applications: Array<{
     id: string
-    status: string
+    status: ApplicationStatus
     cvUrl: string | null
     coverLetter: string | null
-    createdAt: string
+    createdAt: Date | string
     user: {
       name: string | null
       email: string
@@ -62,7 +63,13 @@ export default function ManageJobPage() {
         const appsResponse = await fetch(`/api/jobs/${params.id}/applications`)
         const applications = appsResponse.ok ? await appsResponse.json() : []
         
-        setJob({ ...jobData, applications })
+        // Convert createdAt strings to Date objects
+        const applicationsWithDates = applications.map((app: any) => ({
+          ...app,
+          createdAt: app.createdAt ? new Date(app.createdAt) : new Date(),
+        }))
+        
+        setJob({ ...jobData, applications: applicationsWithDates })
       } catch (error) {
         console.error("Error fetching job:", error)
       } finally {
