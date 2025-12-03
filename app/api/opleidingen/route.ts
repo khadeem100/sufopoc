@@ -90,6 +90,8 @@ export async function POST(req: Request) {
     }
     
     const validatedData = opleidingSchema.parse(preprocessedBody)
+    
+    console.log("Creating opleiding with validated data keys:", Object.keys(validatedData))
 
     const opleiding = await prisma.opleiding.create({
       data: {
@@ -139,8 +141,51 @@ export async function POST(req: Request) {
     }
 
     console.error("Opleiding creation error:", error)
+    
+    // Check if it's a Prisma error
+    if (error && typeof error === 'object' && 'code' in error) {
+      const prismaError = error as any
+      console.error("Prisma error code:", prismaError.code)
+      console.error("Prisma error meta:", prismaError.meta)
+      
+      // Check for missing column/table error
+      if (prismaError.code === 'P2022' || 
+          prismaError.code === 'P2001' ||
+          prismaError.message?.includes('column') || 
+          prismaError.message?.includes('does not exist') ||
+          prismaError.message?.includes('Unknown column') ||
+          prismaError.meta?.column) {
+        return NextResponse.json(
+          { 
+            error: "Database schema mismatch", 
+            message: "The database needs to be migrated. The new Opleiding model fields are not in the database yet.",
+            details: prismaError.message || `Column: ${prismaError.meta?.column}`,
+            solution: "Run: npx prisma db push (for development) or npx prisma migrate dev (for production)"
+          },
+          { status: 500 }
+        )
+      }
+      
+      // Check for enum errors
+      if (prismaError.code === 'P2003' || prismaError.message?.includes('enum') || prismaError.message?.includes('ProgramType')) {
+        return NextResponse.json(
+          { 
+            error: "Database schema mismatch", 
+            message: "The ProgramType enum needs to be created in the database.",
+            details: prismaError.message,
+            solution: "Run: npx prisma db push to sync the schema"
+          },
+          { status: 500 }
+        )
+      }
+    }
+    
     return NextResponse.json(
-      { error: "Internal server error", message: error instanceof Error ? error.message : "Unknown error" },
+      { 
+        error: "Internal server error", 
+        message: error instanceof Error ? error.message : "Unknown error",
+        stack: error instanceof Error ? error.stack : undefined
+      },
       { status: 500 }
     )
   }

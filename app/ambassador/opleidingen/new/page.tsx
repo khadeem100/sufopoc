@@ -186,9 +186,21 @@ export default function NewOpleidingPage() {
       const data = await response.json()
 
       if (!response.ok) {
-        const errorMsg = data.details 
-          ? `${data.error}: ${JSON.stringify(data.details)}`
-          : data.error || "Failed to create opleiding"
+        console.error("API Error Response:", data)
+        let errorMsg = data.error || "Failed to create opleiding"
+        
+        if (data.message) {
+          errorMsg += `: ${data.message}`
+        }
+        
+        if (data.details) {
+          if (Array.isArray(data.details)) {
+            errorMsg += `\nDetails: ${data.details.map((d: any) => `${d.path?.join('.')}: ${d.message}`).join(', ')}`
+          } else {
+            errorMsg += `\nDetails: ${JSON.stringify(data.details)}`
+          }
+        }
+        
         throw new Error(errorMsg)
       }
 

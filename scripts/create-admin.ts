@@ -12,30 +12,40 @@ async function main() {
     where: { email: adminEmail }
   })
 
-  if (existingAdmin) {
-    console.log('✅ Admin user already exists')
-    console.log('Email:', adminEmail)
-    return
-  }
-
   // Hash password
   const hashedPassword = await bcrypt.hash(adminPassword, 10)
 
-  // Create admin user
-  const admin = await prisma.user.create({
-    data: {
-      email: adminEmail,
-      password: hashedPassword,
-      name: 'Admin',
-      role: UserRole.ADMIN,
-      emailVerified: new Date(),
-    },
-  })
-
-  console.log('✅ Admin user created successfully!')
-  console.log('📧 Email:', adminEmail)
-  console.log('🔑 Password:', adminPassword)
-  console.log('⚠️  Please change the password after first login!')
+  if (existingAdmin) {
+    // Update existing admin user
+    const admin = await prisma.user.update({
+      where: { email: adminEmail },
+      data: {
+        password: hashedPassword,
+        name: 'Admin',
+        role: UserRole.ADMIN,
+        emailVerified: new Date(),
+      },
+    })
+    console.log('✅ Admin user updated successfully!')
+    console.log('📧 Email:', adminEmail)
+    console.log('🔑 Password:', adminPassword)
+    console.log('⚠️  Please change the password after first login!')
+  } else {
+    // Create new admin user
+    const admin = await prisma.user.create({
+      data: {
+        email: adminEmail,
+        password: hashedPassword,
+        name: 'Admin',
+        role: UserRole.ADMIN,
+        emailVerified: new Date(),
+      },
+    })
+    console.log('✅ Admin user created successfully!')
+    console.log('📧 Email:', adminEmail)
+    console.log('🔑 Password:', adminPassword)
+    console.log('⚠️  Please change the password after first login!')
+  }
 }
 
 main()
