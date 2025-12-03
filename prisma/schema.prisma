@@ -44,6 +44,16 @@ enum JobCategory {
   OTHER
 }
 
+enum ProgramType {
+  BACHELOR
+  MASTER
+  MBO
+  HBO
+  EXCHANGE
+  CERTIFICATE
+  OTHER
+}
+
 model User {
   id            String    @id @default(cuid())
   email         String    @unique
@@ -145,19 +155,63 @@ model Job {
 
 model Opleiding {
   id          String      @id @default(cuid())
-  title       String
-  description String      @db.Text
-  requirements String     @db.Text
-  location    String?
-  duration    String?
-  category    JobCategory
-  isExpired   Boolean     @default(false)
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-  createdById String
+  
+  // Basis informatie
+  title              String
+  partnerCountry     String
+  partnerSchool      String
+  shortDescription   String              @db.Text
+  longDescription    String              @db.Text
+  category           String
+  programType        ProgramType
 
-  createdBy   User        @relation("OpleidingCreator", fields: [createdById], references: [id], onDelete: Cascade)
-  applications Application[]
+  // School & Land informatie
+  schoolAddress      String?             @db.Text
+  schoolCity         String?
+  schoolCountry      String?
+  schoolEmail        String?
+  schoolPhone        String?
+  schoolWebsite      String?
+  admissionRequirements String           @db.Text
+
+  // Studie details
+  studyDurationYears Int?
+  startDate          DateTime?
+  language           String
+  tuitionFeeYear     Float?
+  scholarships       String?             @db.Text
+  requiredDocuments  String[]            // passport, diploma, CV, etc.
+
+  // Application process
+  applicationDeadline      DateTime?
+  processingTime           String?
+  interviewRequired        Boolean        @default(false)
+  intakeFormRequired       Boolean        @default(false)
+  additionalTests          String[]       // IELTS, TOEFL, etc.
+
+  // Media
+  thumbnailUrl       String
+  bannerUrl          String?
+  promoVideoUrl      String?
+
+  // Extra
+  isVisible          Boolean             @default(true)
+  tags               String[]
+  documents          String[]            // PDF URLs
+
+  // Legacy fields (for backward compatibility during migration)
+  location           String?             @map("location_legacy")
+  duration           String?             @map("duration_legacy")
+  description        String?             @db.Text @map("description_legacy")
+  requirements       String?             @db.Text @map("requirements_legacy")
+  
+  isExpired          Boolean             @default(false)
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  createdById        String
+
+  createdBy          User                @relation("OpleidingCreator", fields: [createdById], references: [id], onDelete: Cascade)
+  applications       Application[]
 
   @@map("opleidingen")
 }
