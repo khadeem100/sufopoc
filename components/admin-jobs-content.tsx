@@ -10,7 +10,9 @@ import { Session } from "next-auth"
 interface Job {
   id: string
   title: string
-  location: string
+  location: string | null
+  city?: string | null
+  country?: string | null
   isExpired: boolean
   createdAt: Date
   createdBy: {
@@ -65,7 +67,11 @@ export function AdminJobsContent({ session, links, jobs }: AdminJobsContentProps
                   <div className="flex justify-between items-start">
                     <div className="flex-1">
                       <h4 className="font-semibold">{job.title}</h4>
-                      <p className="text-sm text-gray-600">{job.location}</p>
+                      <p className="text-sm text-gray-600">
+                        {job.city && job.country 
+                          ? `${job.city}, ${job.country}` 
+                          : job.location || "Location not specified"}
+                      </p>
                       <p className="text-sm text-gray-600">
                         Created by: {job.createdBy.name || job.createdBy.email}
                       </p>

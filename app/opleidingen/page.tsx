@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -9,8 +9,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import Link from "next/link"
-import { GraduationCap, MapPin, Clock } from "lucide-react"
+import { PageHeader } from "@/components/ui/page-header"
+import { OpleidingCard } from "@/components/ui/opleiding-card"
 import { JobCategory } from "@prisma/client"
 
 interface OpleidingenPageProps {
@@ -28,14 +28,17 @@ export default async function OpleidingenPage({ searchParams }: OpleidingenPageP
     where.title = { contains: searchParams.search, mode: "insensitive" }
   }
   if (searchParams.location) {
-    where.location = { contains: searchParams.location, mode: "insensitive" }
+    where.OR = [
+      { schoolCity: { contains: searchParams.location, mode: "insensitive" } },
+      { schoolCountry: { contains: searchParams.location, mode: "insensitive" } },
+      { partnerCountry: { contains: searchParams.location, mode: "insensitive" } },
+      { location: { contains: searchParams.location, mode: "insensitive" } },
+    ]
   }
   if (searchParams.category && searchParams.category !== "all") {
     where.category = searchParams.category as JobCategory
   }
   
-  // Filter out expired opleidingen
-  // IMPORTANT: Run migration first: npx prisma db push
   where.isExpired = false
 
   const opleidingen = await prisma.opleiding.findMany({
@@ -54,14 +57,15 @@ export default async function OpleidingenPage({ searchParams }: OpleidingenPageP
 
   return (
     <div className="min-h-screen bg-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <PageHeader />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-black mb-2">Browse Opleidingen</h1>
-          <p className="text-gray-600">Discover study abroad and enrollment opportunities</p>
+          <h1 className="text-4xl md:text-5xl font-bold text-black mb-2">Browse Study Abroad Programs</h1>
+          <p className="text-gray-600 text-lg">Discover study abroad and enrollment opportunities</p>
         </div>
 
         {/* Filters */}
-        <Card className="mb-8">
+        <Card className="mb-12 border-gray-200 shadow-sm">
           <CardContent className="pt-6">
             <form action="/opleidingen" method="get" className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <Input
@@ -87,62 +91,48 @@ export default async function OpleidingenPage({ searchParams }: OpleidingenPageP
                   ))}
                 </SelectContent>
               </Select>
-              <Button type="submit" className="md:col-span-3">Search</Button>
+              <Button type="submit" className="md:col-span-3 bg-black hover:bg-gray-800">Search</Button>
             </form>
           </CardContent>
         </Card>
 
-        {/* Opleidingen List */}
-        <div className="space-y-4">
-          {opleidingen.length === 0 ? (
-            <Card>
-              <CardContent className="pt-6 text-center text-gray-600">
-                No opleidingen found. Try adjusting your filters.
-              </CardContent>
-            </Card>
-          ) : (
-            opleidingen.map((opleiding) => (
-              <Card key={opleiding.id} className="hover:shadow-lg transition-shadow">
-                <CardHeader>
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <CardTitle className="text-xl">{opleiding.title}</CardTitle>
-                      <CardDescription className="mt-1">
-                        {opleiding.createdBy.name || "Unknown"}
-                      </CardDescription>
-                    </div>
-                    <Link href={`/opleidingen/${opleiding.id}`}>
-                      <Button>View Details</Button>
-                    </Link>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
-                    {opleiding.location && (
-                      <div className="flex items-center">
-                        <MapPin className="h-4 w-4 mr-2" />
-                        {opleiding.location}
-                      </div>
-                    )}
-                    <div className="flex items-center">
-                      <GraduationCap className="h-4 w-4 mr-2" />
-                      {opleiding.category.replace(/_/g, " ")}
-                    </div>
-                    {opleiding.duration && (
-                      <div className="flex items-center">
-                        <Clock className="h-4 w-4 mr-2" />
-                        {opleiding.duration}
-                      </div>
-                    )}
-                  </div>
-                  <p className="mt-4 text-gray-700 line-clamp-2">{opleiding.description}</p>
-                </CardContent>
-              </Card>
-            ))
-          )}
-        </div>
+        {/* Opleidingen Grid */}
+        {opleidingen.length === 0 ? (
+          <Card className="border-gray-200">
+            <CardContent className="pt-6 text-center text-gray-600">
+              No study programs found. Try adjusting your filters.
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {opleidingen.map((opleiding) => (
+              <OpleidingCard
+                key={opleiding.id}
+                id={opleiding.id}
+                title={opleiding.title}
+                shortDescription={opleiding.shortDescription}
+                longDescription={opleiding.longDescription}
+                description={opleiding.description}
+                category={opleiding.category}
+                programType={opleiding.programType}
+                partnerCountry={opleiding.partnerCountry}
+                partnerSchool={opleiding.partnerSchool}
+                schoolCity={opleiding.schoolCity}
+                schoolCountry={opleiding.schoolCountry}
+                location={opleiding.location}
+                studyDurationYears={opleiding.studyDurationYears}
+                duration={opleiding.duration}
+                language={opleiding.language}
+                tuitionFeeYear={opleiding.tuitionFeeYear}
+                tags={opleiding.tags}
+                thumbnailUrl={opleiding.thumbnailUrl}
+                bannerUrl={opleiding.bannerUrl}
+                createdAt={opleiding.createdAt}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   )
 }
-

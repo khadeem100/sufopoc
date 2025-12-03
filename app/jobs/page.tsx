@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -9,8 +9,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import Link from "next/link"
-import { Briefcase, MapPin, DollarSign, Calendar, Building2, Award } from "lucide-react"
+import { PageHeader } from "@/components/ui/page-header"
+import { JobCard } from "@/components/ui/job-card"
 
 interface JobsPageProps {
   searchParams: {
@@ -53,7 +53,6 @@ export default async function JobsPage({ searchParams }: JobsPageProps) {
     where.employmentType = searchParams.employmentType
   }
   
-  // Filter out expired jobs and only show visible jobs
   where.isExpired = false
   where.isVisible = true
 
@@ -71,7 +70,6 @@ export default async function JobsPage({ searchParams }: JobsPageProps) {
     },
   })
 
-  // Get unique categories and countries for filters
   const allJobs = await prisma.job.findMany({
     where: { isExpired: false, isVisible: true },
     select: { category: true, country: true, jobType: true, employmentType: true },
@@ -84,14 +82,15 @@ export default async function JobsPage({ searchParams }: JobsPageProps) {
 
   return (
     <div className="min-h-screen bg-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <PageHeader />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-black mb-2">Browse Jobs</h1>
-          <p className="text-gray-600">Find your next opportunity</p>
+          <h1 className="text-4xl md:text-5xl font-bold text-black mb-2">Browse Jobs</h1>
+          <p className="text-gray-600 text-lg">Find your next opportunity</p>
         </div>
 
         {/* Filters */}
-        <Card className="mb-8">
+        <Card className="mb-12 border-gray-200 shadow-sm">
           <CardContent className="pt-6">
             <form action="/jobs" method="get" className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
               <Input
@@ -149,82 +148,41 @@ export default async function JobsPage({ searchParams }: JobsPageProps) {
           </CardContent>
         </Card>
 
-        {/* Jobs List */}
-        <div className="space-y-4">
-          {jobs.length === 0 ? (
-            <Card>
-              <CardContent className="pt-6 text-center text-gray-600">
-                No jobs found. Try adjusting your filters.
-              </CardContent>
-            </Card>
-          ) : (
-            jobs.map((job) => (
-              <Card key={job.id} className="hover:shadow-lg transition-shadow">
-                <CardHeader>
-                  <div className="flex justify-between items-start">
-                    <div className="flex-1">
-                      <CardTitle className="text-xl">{job.title}</CardTitle>
-                      <CardDescription className="mt-1">
-                        {job.companyName || job.createdBy.name || "Unknown"}
-                      </CardDescription>
-                    </div>
-                    <Link href={`/jobs/${job.id}`}>
-                      <Button className="bg-black hover:bg-gray-800">View Details</Button>
-                    </Link>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm text-gray-600 mb-4">
-                    <div className="flex items-center">
-                      <MapPin className="h-4 w-4 mr-2" />
-                      {job.city && job.country ? `${job.city}, ${job.country}` : job.location || `${job.city || ""} ${job.country || ""}`.trim() || "Location not specified"}
-                    </div>
-                    <div className="flex items-center">
-                      <Briefcase className="h-4 w-4 mr-2" />
-                      {job.category || "N/A"}
-                    </div>
-                    {job.jobType && (
-                      <div className="flex items-center">
-                        <Calendar className="h-4 w-4 mr-2" />
-                        {job.jobType.replace(/-/g, " ")}
-                      </div>
-                    )}
-                    {job.employmentType && (
-                      <div className="flex items-center">
-                        <Building2 className="h-4 w-4 mr-2" />
-                        {job.employmentType.replace(/-/g, " ")}
-                      </div>
-                    )}
-                  </div>
-                  {job.salaryMin && job.salaryMax && (
-                    <div className="flex items-center text-gray-600 mb-4">
-                      <DollarSign className="h-4 w-4 mr-2" />
-                      <span>
-                        {job.currency || "EUR"} {job.salaryMin.toLocaleString()} - {job.salaryMax.toLocaleString()}
-                      </span>
-                    </div>
-                  )}
-                  {job.shortDescription ? (
-                    <p className="text-gray-700 line-clamp-2">{job.shortDescription}</p>
-                  ) : job.fullDescription ? (
-                    <p className="text-gray-700 line-clamp-2">{job.fullDescription}</p>
-                  ) : job.description ? (
-                    <p className="text-gray-700 line-clamp-2">{job.description}</p>
-                  ) : null}
-                  {job.tags && job.tags.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mt-4">
-                      {job.tags.slice(0, 5).map((tag, idx) => (
-                        <span key={idx} className="bg-gray-100 text-gray-800 px-2 py-1 rounded text-xs">
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            ))
-          )}
-        </div>
+        {/* Jobs Grid */}
+        {jobs.length === 0 ? (
+          <Card className="border-gray-200">
+            <CardContent className="pt-6 text-center text-gray-600">
+              No jobs found. Try adjusting your filters.
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {jobs.map((job) => (
+              <JobCard
+                key={job.id}
+                id={job.id}
+                title={job.title}
+                companyName={job.companyName}
+                shortDescription={job.shortDescription}
+                fullDescription={job.fullDescription}
+                description={job.description}
+                category={job.category}
+                jobType={job.jobType}
+                employmentType={job.employmentType}
+                city={job.city}
+                country={job.country}
+                location={job.location}
+                salaryMin={job.salaryMin}
+                salaryMax={job.salaryMax}
+                currency={job.currency}
+                tags={job.tags}
+                logoUrl={job.logoUrl}
+                bannerUrl={job.bannerUrl}
+                createdAt={job.createdAt}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   )

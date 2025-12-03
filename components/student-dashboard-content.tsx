@@ -23,7 +23,7 @@ interface StudentDashboardContentProps {
     icon: React.ReactNode
   }>
   applications: Application[]
-  jobs: Array<{ id: string; title: string; location: string }>
+  jobs: Array<{ id: string; title: string; location: string | null }>
   opleidingen: Array<{ id: string; title: string; category: string }>
 }
 
@@ -215,7 +215,7 @@ export function StudentDashboardContent({ session, links, applications, jobs, op
                   {jobs.map((job) => (
                     <div key={job.id} className="p-4 border border-gray-200 rounded-lg hover:border-gray-400 hover:shadow-md transition-all duration-200">
                       <h4 className="font-semibold text-gray-900">{job.title}</h4>
-                      <p className="text-sm text-gray-600 mt-1">{job.location}</p>
+                      <p className="text-sm text-gray-600 mt-1">{job.location || "Location not specified"}</p>
                       <Link href={`/jobs/${job.id}`}>
                         <Button variant="outline" size="sm" className="mt-3">
                           View Details

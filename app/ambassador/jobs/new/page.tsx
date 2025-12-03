@@ -115,10 +115,11 @@ export default function NewJobPage() {
   }, [])
 
   const addItem = (field: string, value: string, setter: (val: string) => void) => {
-    if (value.trim() && !formData[field as keyof typeof formData].includes(value.trim())) {
+    const fieldValue = formData[field as keyof typeof formData]
+    if (value.trim() && Array.isArray(fieldValue) && !fieldValue.includes(value.trim())) {
       setFormData({
         ...formData,
-        [field]: [...(formData[field as keyof typeof formData] as string[]), value.trim()],
+        [field]: [...fieldValue, value.trim()],
       })
       setter("")
     }
