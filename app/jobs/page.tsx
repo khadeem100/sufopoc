@@ -37,6 +37,9 @@ export default async function JobsPage({ searchParams }: JobsPageProps) {
   if (searchParams.type && searchParams.type !== "all") {
     where.type = searchParams.type as JobType
   }
+  
+  // Filter out expired jobs
+  where.isExpired = false
 
   const jobs = await prisma.job.findMany({
     where,

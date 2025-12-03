@@ -33,6 +33,9 @@ export default async function OpleidingenPage({ searchParams }: OpleidingenPageP
   if (searchParams.category && searchParams.category !== "all") {
     where.category = searchParams.category as JobCategory
   }
+  
+  // Filter out expired opleidingen
+  where.isExpired = false
 
   const opleidingen = await prisma.opleiding.findMany({
     where,

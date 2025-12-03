@@ -87,11 +87,23 @@ export default async function AdminJobsPage() {
                         Posted: {new Date(job.createdAt).toLocaleDateString()}
                       </p>
                     </div>
-                    <Link href={`/jobs/${job.id}`}>
-                      <Button variant="outline" size="sm">
-                        View
-                      </Button>
-                    </Link>
+                    <div className="flex gap-2">
+                      {job.isExpired && (
+                        <span className="px-2 py-1 bg-red-100 text-red-800 rounded text-xs font-medium">
+                          Expired
+                        </span>
+                      )}
+                      <Link href={`/jobs/${job.id}`}>
+                        <Button variant="outline" size="sm">
+                          View
+                        </Button>
+                      </Link>
+                      <Link href={`/ambassador/jobs/${job.id}`}>
+                        <Button variant="outline" size="sm">
+                          Manage
+                        </Button>
+                      </Link>
+                    </div>
                   </div>
                 </div>
               ))}

@@ -89,11 +89,23 @@ export default async function AdminOpleidingenPage() {
                         Posted: {new Date(opleiding.createdAt).toLocaleDateString()}
                       </p>
                     </div>
-                    <Link href={`/opleidingen/${opleiding.id}`}>
-                      <Button variant="outline" size="sm">
-                        View
-                      </Button>
-                    </Link>
+                    <div className="flex gap-2">
+                      {opleiding.isExpired && (
+                        <span className="px-2 py-1 bg-red-100 text-red-800 rounded text-xs font-medium">
+                          Expired
+                        </span>
+                      )}
+                      <Link href={`/opleidingen/${opleiding.id}`}>
+                        <Button variant="outline" size="sm">
+                          View
+                        </Button>
+                      </Link>
+                      <Link href={`/ambassador/opleidingen/${opleiding.id}`}>
+                        <Button variant="outline" size="sm">
+                          Manage
+                        </Button>
+                      </Link>
+                    </div>
                   </div>
                 </div>
               ))}
