@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -84,6 +84,11 @@ export default function NewOpleidingPage() {
   const [newTag, setNewTag] = useState("")
   const [newDocument, setNewDocument] = useState("")
   const [newTest, setNewTest] = useState("")
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const addTag = () => {
     if (newTag.trim() && !formData.tags.includes(newTag.trim())) {
@@ -137,23 +142,54 @@ export default function NewOpleidingPage() {
     setLoading(true)
     setError("")
 
+    // Validate required fields
+    if (!formData.title || !formData.partnerCountry || !formData.partnerSchool || 
+        !formData.shortDescription || !formData.longDescription || !formData.category || 
+        !formData.programType || !formData.admissionRequirements || !formData.language) {
+      setError("Please fill in all required fields")
+      setLoading(false)
+      return
+    }
+
+    if (!formData.thumbnailUrl) {
+      setError("Thumbnail URL is required")
+      setLoading(false)
+      return
+    }
+
     try {
+      // Clean up data - convert empty strings to null
+      const cleanedData = {
+        ...formData,
+        studyDurationYears: formData.studyDurationYears ? parseInt(formData.studyDurationYears) : null,
+        tuitionFeeYear: formData.tuitionFeeYear ? parseFloat(formData.tuitionFeeYear) : null,
+        startDate: formData.startDate && formData.startDate !== "" ? formData.startDate : null,
+        applicationDeadline: formData.applicationDeadline && formData.applicationDeadline !== "" ? formData.applicationDeadline : null,
+        schoolAddress: formData.schoolAddress || null,
+        schoolCity: formData.schoolCity || null,
+        schoolCountry: formData.schoolCountry || null,
+        schoolEmail: formData.schoolEmail && formData.schoolEmail !== "" ? formData.schoolEmail : null,
+        schoolPhone: formData.schoolPhone || null,
+        schoolWebsite: formData.schoolWebsite && formData.schoolWebsite !== "" ? formData.schoolWebsite : null,
+        scholarships: formData.scholarships || null,
+        processingTime: formData.processingTime || null,
+        bannerUrl: formData.bannerUrl && formData.bannerUrl !== "" ? formData.bannerUrl : null,
+        promoVideoUrl: formData.promoVideoUrl && formData.promoVideoUrl !== "" ? formData.promoVideoUrl : null,
+      }
+
       const response = await fetch("/api/opleidingen", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...formData,
-          studyDurationYears: formData.studyDurationYears ? parseInt(formData.studyDurationYears) : null,
-          tuitionFeeYear: formData.tuitionFeeYear ? parseFloat(formData.tuitionFeeYear) : null,
-          startDate: formData.startDate || null,
-          applicationDeadline: formData.applicationDeadline || null,
-        }),
+        body: JSON.stringify(cleanedData),
       })
 
       const data = await response.json()
 
       if (!response.ok) {
-        throw new Error(data.error || "Failed to create opleiding")
+        const errorMsg = data.details 
+          ? `${data.error}: ${JSON.stringify(data.details)}`
+          : data.error || "Failed to create opleiding"
+        throw new Error(errorMsg)
       }
 
       toast({
@@ -182,6 +218,14 @@ export default function NewOpleidingPage() {
 
   const prevStep = () => {
     if (currentStep > 1) setCurrentStep(currentStep - 1)
+  }
+
+  if (!mounted) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 flex items-center justify-center">
+        <p>Loading...</p>
+      </div>
+    )
   }
 
   return (

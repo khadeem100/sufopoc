@@ -26,14 +26,14 @@ const opleidingSchema = z.object({
 
   // Studie details
   studyDurationYears: z.number().int().positive().nullable().optional(),
-  startDate: z.string().datetime().nullable().optional(),
+  startDate: z.string().nullable().optional(),
   language: z.string().min(1),
   tuitionFeeYear: z.number().positive().nullable().optional(),
   scholarships: z.string().nullable().optional(),
   requiredDocuments: z.array(z.string()).default([]),
 
   // Application process
-  applicationDeadline: z.string().datetime().nullable().optional(),
+  applicationDeadline: z.string().nullable().optional(),
   processingTime: z.string().nullable().optional(),
   interviewRequired: z.boolean().default(false),
   intakeFormRequired: z.boolean().default(false),
@@ -71,7 +71,25 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json()
-    const validatedData = opleidingSchema.parse(body)
+    
+    // Preprocess: convert empty strings to null for optional fields
+    const preprocessedBody = {
+      ...body,
+      schoolEmail: body.schoolEmail === "" ? null : body.schoolEmail,
+      schoolWebsite: body.schoolWebsite === "" ? null : body.schoolWebsite,
+      bannerUrl: body.bannerUrl === "" ? null : body.bannerUrl,
+      promoVideoUrl: body.promoVideoUrl === "" ? null : body.promoVideoUrl,
+      schoolAddress: body.schoolAddress === "" ? null : body.schoolAddress,
+      schoolCity: body.schoolCity === "" ? null : body.schoolCity,
+      schoolCountry: body.schoolCountry === "" ? null : body.schoolCountry,
+      schoolPhone: body.schoolPhone === "" ? null : body.schoolPhone,
+      scholarships: body.scholarships === "" ? null : body.scholarships,
+      processingTime: body.processingTime === "" ? null : body.processingTime,
+      startDate: body.startDate === "" ? null : body.startDate,
+      applicationDeadline: body.applicationDeadline === "" ? null : body.applicationDeadline,
+    }
+    
+    const validatedData = opleidingSchema.parse(preprocessedBody)
 
     const opleiding = await prisma.opleiding.create({
       data: {
@@ -94,7 +112,7 @@ export async function POST(req: Request) {
         language: validatedData.language,
         tuitionFeeYear: validatedData.tuitionFeeYear || null,
         scholarships: validatedData.scholarships || null,
-        requiredDocuments: validatedData.requiredDocuments,
+        requiredDocuments: validatedData.requiredDocuments || [],
         applicationDeadline: validatedData.applicationDeadline ? new Date(validatedData.applicationDeadline) : null,
         processingTime: validatedData.processingTime || null,
         interviewRequired: validatedData.interviewRequired,
@@ -113,6 +131,7 @@ export async function POST(req: Request) {
     return NextResponse.json(opleiding, { status: 201 })
   } catch (error) {
     if (error instanceof z.ZodError) {
+      console.error("Validation error:", error.errors)
       return NextResponse.json(
         { error: "Invalid input", details: error.errors },
         { status: 400 }
@@ -121,7 +140,7 @@ export async function POST(req: Request) {
 
     console.error("Opleiding creation error:", error)
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: "Internal server error", message: error instanceof Error ? error.message : "Unknown error" },
       { status: 500 }
     )
   }
