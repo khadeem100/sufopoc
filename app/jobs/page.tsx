@@ -39,6 +39,7 @@ export default async function JobsPage({ searchParams }: JobsPageProps) {
   }
   
   // Filter out expired jobs
+  // IMPORTANT: Run migration first: npx prisma db push
   where.isExpired = false
 
   const jobs = await prisma.job.findMany({

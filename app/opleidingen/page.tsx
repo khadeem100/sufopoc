@@ -35,6 +35,7 @@ export default async function OpleidingenPage({ searchParams }: OpleidingenPageP
   }
   
   // Filter out expired opleidingen
+  // IMPORTANT: Run migration first: npx prisma db push
   where.isExpired = false
 
   const opleidingen = await prisma.opleiding.findMany({
