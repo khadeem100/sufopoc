@@ -109,7 +109,7 @@ export function ApplyOpleidingButton({ opleidingId, userId, existingApplication 
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Apply for this Training</DialogTitle>
+          <DialogTitle>Enroll in this Study Program</DialogTitle>
           <DialogDescription>
             Fill in your details to apply for this opleiding
           </DialogDescription>

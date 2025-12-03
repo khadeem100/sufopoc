@@ -1,7 +1,8 @@
 "use client"
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
+import { useState, useEffect } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
+import { signIn } from "next-auth/react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -17,6 +18,7 @@ import {
 
 export default function SignUpPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -26,6 +28,16 @@ export default function SignUpPage() {
   })
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
+  
+  const callbackUrl = searchParams.get("callbackUrl") || null
+  const roleParam = searchParams.get("role")
+  
+  // Set role from URL parameter if provided
+  useEffect(() => {
+    if (roleParam && ["STUDENT", "EXPERT", "AMBASSADOR"].includes(roleParam)) {
+      setFormData(prev => ({ ...prev, role: roleParam }))
+    }
+  }, [roleParam])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -63,8 +75,31 @@ export default function SignUpPage() {
         return
       }
 
+      // Automatically sign in the user after successful signup
+      const signInResult = await signIn("credentials", {
+        email: formData.email,
+        password: formData.password,
+        redirect: false,
+      })
+
+      if (signInResult?.error) {
+        setError("Account created but failed to sign in. Please try signing in manually.")
+        setLoading(false)
+        return
+      }
+
+      // If there's a callback URL, redirect there after onboarding
+      // Otherwise, go to onboarding
+      if (callbackUrl) {
+        // Store callback URL in sessionStorage to redirect after onboarding
+        if (typeof window !== "undefined") {
+          sessionStorage.setItem("onboardingCallbackUrl", callbackUrl)
+        }
+      }
+      
       // Redirect to onboarding
       router.push(`/onboarding/${formData.role.toLowerCase()}`)
+      router.refresh()
     } catch (error) {
       setError("Something went wrong. Please try again.")
       setLoading(false)
@@ -83,7 +118,7 @@ export default function SignUpPage() {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+              <div className="bg-gray-100 border border-gray-300 text-gray-600 px-4 py-3 rounded">
                 {error}
               </div>
             )}
@@ -151,7 +186,10 @@ export default function SignUpPage() {
           </form>
           <div className="mt-4 text-center text-sm text-gray-600">
             Already have an account?{" "}
-            <Link href="/auth/signin" className="text-black underline">
+            <Link 
+              href={`/auth/signin${callbackUrl ? `?callbackUrl=${encodeURIComponent(callbackUrl)}` : ""}`} 
+              className="text-black underline"
+            >
               Sign in
             </Link>
           </div>

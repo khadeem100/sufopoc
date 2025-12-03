@@ -182,7 +182,7 @@ export default function ManageOpleidingPage() {
           </Link>
           <div className="flex gap-2">
             {opleiding.isExpired && (
-              <span className="px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm font-medium">
+              <span className="px-3 py-1 bg-gray-100 text-gray-800 rounded-full text-sm font-medium">
                 Expired
               </span>
             )}
@@ -196,7 +196,7 @@ export default function ManageOpleidingPage() {
               variant="outline"
               size="sm"
               onClick={handleToggleExpired}
-              className={opleiding.isExpired ? "text-green-600 hover:text-green-700" : "text-orange-600 hover:text-orange-700"}
+              className={opleiding.isExpired ? "text-gray-600 hover:text-gray-700" : "text-gray-600 hover:text-gray-700"}
             >
               {opleiding.isExpired ? (
                 <>

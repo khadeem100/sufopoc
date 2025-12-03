@@ -1,16 +1,43 @@
-import { getServerSession } from "next-auth"
-import { authOptions } from "@/lib/auth"
-import { redirect } from "next/navigation"
-import { prisma } from "@/lib/prisma"
+"use client"
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
-import { ApplicationList } from "@/components/application-list"
 import { ApplicationStatus } from "@prisma/client"
-import { LogoutButton } from "@/components/logout-button"
 import { FileText, Briefcase, GraduationCap } from "lucide-react"
+import { DashboardLayout } from "@/components/dashboard-layout"
+import { Session } from "next-auth"
 
-interface ApplicationsPageProps {
+interface Application {
+  id: string
+  status: ApplicationStatus
+  cvUrl: string | null
+  coverLetter: string | null
+  createdAt: Date
+  user: {
+    name: string | null
+    email: string
+  }
+  job?: {
+    id: string
+    title: string
+  } | null
+  opleiding?: {
+    id: string
+    title: string
+  } | null
+}
+
+interface AdminApplicationsContentProps {
+  session: Session
+  links: Array<{
+    label: string
+    href: string
+    icon: React.ReactNode
+  }>
+  applications: Application[]
+  jobs: Array<{ id: string; title: string }>
+  opleidingen: Array<{ id: string; title: string }>
   searchParams: {
     status?: string
     type?: string
@@ -19,75 +46,7 @@ interface ApplicationsPageProps {
   }
 }
 
-export default async function ApplicationsPage({ searchParams }: ApplicationsPageProps) {
-  const session = await getServerSession(authOptions)
-  if (!session || (session.user.role !== "AMBASSADOR" && session.user.role !== "ADMIN")) {
-    redirect("/")
-  }
-
-  // Get all jobs and opleidingen created by this user
-  const jobs = await prisma.job.findMany({
-    where: { createdById: session.user.id },
-    select: { id: true, title: true },
-  })
-
-  const opleidingen = await prisma.opleiding.findMany({
-    where: { createdById: session.user.id },
-    select: { id: true, title: true },
-  })
-
-  // Build where clause for applications
-  const where: any = {
-    OR: [
-      { jobId: { in: jobs.map((j) => j.id) } },
-      { opleidingId: { in: opleidingen.map((o) => o.id) } },
-    ],
-  }
-
-  // Filter by status
-  if (searchParams.status && searchParams.status !== "all") {
-    where.status = searchParams.status as ApplicationStatus
-  }
-
-  // Filter by job
-  if (searchParams.jobId && searchParams.jobId !== "all") {
-    where.jobId = searchParams.jobId
-  }
-
-  // Filter by opleiding
-  if (searchParams.opleidingId && searchParams.opleidingId !== "all") {
-    where.opleidingId = searchParams.opleidingId
-  }
-
-  // Get applications
-  const applications = await prisma.application.findMany({
-    where,
-    include: {
-      user: {
-        select: {
-          name: true,
-          email: true,
-        },
-      },
-      job: {
-        select: {
-          id: true,
-          title: true,
-        },
-      },
-      opleiding: {
-        select: {
-          id: true,
-          title: true,
-        },
-      },
-    },
-    orderBy: {
-      createdAt: "desc",
-    },
-  })
-
-  // Get stats
+export function AdminApplicationsContent({ session, links, applications, jobs, opleidingen, searchParams }: AdminApplicationsContentProps) {
   const stats = {
     total: applications.length,
     submitted: applications.filter((a) => a.status === "SUBMITTED").length,
@@ -98,31 +57,18 @@ export default async function ApplicationsPage({ searchParams }: ApplicationsPag
   }
 
   return (
-    <div className="min-h-screen bg-white">
-      <nav className="border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-8">
-              <h1 className="text-xl font-semibold">Applications</h1>
-              <Link href="/ambassador">
-                <Button variant="ghost">Dashboard</Button>
-              </Link>
-              <Link href="/jobs">
-                <Button variant="ghost">Browse Jobs</Button>
-              </Link>
-              <Link href="/opleidingen">
-                <Button variant="ghost">Browse Opleidingen</Button>
-              </Link>
-            </div>
-            <LogoutButton />
-          </div>
-        </div>
-      </nav>
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <DashboardLayout
+      links={links}
+      user={{
+        name: session.user.name || null,
+        email: session.user.email || "",
+        image: session.user.image || null,
+      }}
+    >
+      <div className="w-full">
         <div className="mb-8">
-          <h2 className="text-3xl font-bold text-black">Applications Overview</h2>
-          <p className="text-gray-600 mt-2">Manage all applications for your jobs and opleidingen</p>
+          <h2 className="text-3xl font-bold text-black">All Applications</h2>
+          <p className="text-gray-600 mt-2">View and manage all applications across the platform</p>
         </div>
 
         {/* Stats */}
@@ -183,7 +129,7 @@ export default async function ApplicationsPage({ searchParams }: ApplicationsPag
             <CardTitle>Filters</CardTitle>
           </CardHeader>
           <CardContent>
-            <form action="/ambassador/applications" method="get" className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <form action="/admin/applications" method="get" className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <label className="text-sm font-medium mb-2 block">Status</label>
                 <select
@@ -231,7 +177,7 @@ export default async function ApplicationsPage({ searchParams }: ApplicationsPag
               </div>
               <div className="md:col-span-3">
                 <Button type="submit">Apply Filters</Button>
-                <Link href="/ambassador/applications">
+                <Link href="/admin/applications">
                   <Button type="button" variant="outline" className="ml-2">
                     Clear Filters
                   </Button>
@@ -259,7 +205,7 @@ export default async function ApplicationsPage({ searchParams }: ApplicationsPag
                 <p className="text-sm text-gray-500 mt-2">
                   {searchParams.status || searchParams.jobId || searchParams.opleidingId
                     ? "Try adjusting your filters"
-                    : "Applications will appear here when users apply to your jobs or opleidingen"}
+                    : "No applications have been submitted yet"}
                 </p>
               </div>
             ) : (
@@ -344,7 +290,7 @@ export default async function ApplicationsPage({ searchParams }: ApplicationsPag
           </CardContent>
         </Card>
       </div>
-    </div>
+    </DashboardLayout>
   )
 }
 

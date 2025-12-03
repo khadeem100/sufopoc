@@ -3,17 +3,61 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { z } from "zod"
-import { JobType, JobCategory } from "@prisma/client"
 
 const jobSchema = z.object({
+  // Basic job info
   title: z.string().min(1),
-  description: z.string().min(1),
-  requirements: z.string().min(1),
-  location: z.string().min(1),
-  salaryMin: z.number().nullable(),
-  salaryMax: z.number().nullable(),
-  type: z.nativeEnum(JobType),
-  category: z.nativeEnum(JobCategory),
+  companyName: z.string().min(1),
+  category: z.string().min(1),
+  jobType: z.string().min(1),
+  seniorityLevel: z.string().min(1),
+  employmentType: z.string().min(1),
+
+  // Location & expat-specific
+  country: z.string().min(1),
+  city: z.string().min(1),
+  relocationSupport: z.boolean().default(false),
+  visaSponsorship: z.boolean().default(false),
+  visaType: z.string().nullable().optional(),
+  housingSupport: z.boolean().default(false),
+  relocationPackage: z.string().nullable().optional(),
+
+  // Job description details
+  shortDescription: z.string().min(1),
+  fullDescription: z.string().min(1),
+  responsibilities: z.array(z.string()).default([]),
+  requirements: z.array(z.string()).default([]),
+  requiredLanguages: z.array(z.string()).default([]),
+  optionalSkills: z.array(z.string()).default([]),
+
+  // Salary & benefits
+  salaryMin: z.number().nullable().optional(),
+  salaryMax: z.number().nullable().optional(),
+  currency: z.string().nullable().optional(),
+  bonusOptions: z.string().nullable().optional(),
+  extraBenefits: z.array(z.string()).default([]),
+
+  // Application requirements
+  requiredDocuments: z.array(z.string()).default([]),
+  interviewRequired: z.boolean().default(false),
+  interviewFormat: z.string().nullable().optional(),
+  additionalTests: z.array(z.string()).default([]),
+
+  // Process timeline
+  applicationDeadline: z.string().nullable().optional(),
+  hiringTimeline: z.string().nullable().optional(),
+  startDate: z.string().nullable().optional(),
+  positionsAvailable: z.number().int().positive().default(1),
+
+  // Media
+  logoUrl: z.string().nullable().optional(),
+  bannerUrl: z.string().nullable().optional(),
+  promoVideoUrl: z.string().nullable().optional(),
+
+  // Internal
+  isVisible: z.boolean().default(true),
+  tags: z.array(z.string()).default([]),
+  documents: z.array(z.string()).default([]),
 })
 
 export async function POST(req: Request) {
@@ -37,11 +81,32 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json()
-    const validatedData = jobSchema.parse(body)
+
+    // Preprocess data: convert empty strings to null for optional fields
+    const preprocessedData = {
+      ...body,
+      visaType: body.visaType === "" ? null : body.visaType,
+      relocationPackage: body.relocationPackage === "" ? null : body.relocationPackage,
+      currency: body.currency === "" ? null : body.currency,
+      bonusOptions: body.bonusOptions === "" ? null : body.bonusOptions,
+      interviewFormat: body.interviewFormat === "" ? null : body.interviewFormat,
+      hiringTimeline: body.hiringTimeline === "" ? null : body.hiringTimeline,
+      logoUrl: body.logoUrl === "" ? null : body.logoUrl,
+      bannerUrl: body.bannerUrl === "" ? null : body.bannerUrl,
+      promoVideoUrl: body.promoVideoUrl === "" ? null : body.promoVideoUrl,
+      applicationDeadline: body.applicationDeadline === "" ? null : (body.applicationDeadline ? new Date(body.applicationDeadline) : null),
+      startDate: body.startDate === "" ? null : (body.startDate ? new Date(body.startDate) : null),
+      salaryMin: body.salaryMin === "" || body.salaryMin === null ? null : parseFloat(body.salaryMin),
+      salaryMax: body.salaryMax === "" || body.salaryMax === null ? null : parseFloat(body.salaryMax),
+    }
+
+    const validatedData = jobSchema.parse(preprocessedData)
 
     const job = await prisma.job.create({
       data: {
         ...validatedData,
+        applicationDeadline: validatedData.applicationDeadline ? new Date(validatedData.applicationDeadline) : null,
+        startDate: validatedData.startDate ? new Date(validatedData.startDate) : null,
         createdById: session.user.id,
       },
     })
@@ -49,17 +114,32 @@ export async function POST(req: Request) {
     return NextResponse.json(job, { status: 201 })
   } catch (error) {
     if (error instanceof z.ZodError) {
+      console.error("Validation error:", error.errors)
       return NextResponse.json(
         { error: "Invalid input", details: error.errors },
         { status: 400 }
       )
     }
 
+    // Handle Prisma errors
+    if (error && typeof error === 'object' && 'code' in error) {
+      const prismaError = error as { code: string; meta?: any }
+      if (prismaError.code === 'P2022' || prismaError.code === 'P2001') {
+        return NextResponse.json(
+          {
+            error: "Database schema mismatch. Please run database migration.",
+            details: `Column or table not found: ${prismaError.meta?.column || prismaError.meta?.target}`,
+            migrationHint: "Run: npx prisma db push or npx prisma migrate dev"
+          },
+          { status: 500 }
+        )
+      }
+    }
+
     console.error("Job creation error:", error)
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: "Internal server error", stack: process.env.NODE_ENV === 'development' ? String(error) : undefined },
       { status: 500 }
     )
   }
 }
-

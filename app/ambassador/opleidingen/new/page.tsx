@@ -255,7 +255,7 @@ export default function NewOpleidingPage() {
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
               {error && (
-                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+                <div className="bg-gray-100 border border-gray-300 text-gray-600 px-4 py-3 rounded">
                   {error}
                 </div>
               )}
@@ -580,13 +580,13 @@ export default function NewOpleidingPage() {
                       {formData.additionalTests.map((test) => (
                         <span
                           key={test}
-                          className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-sm flex items-center gap-1"
+                          className="px-2 py-1 bg-gray-100 text-gray-600 rounded text-sm flex items-center gap-1"
                         >
                           {test}
                           <button
                             type="button"
                             onClick={() => removeTest(test)}
-                            className="hover:text-blue-600"
+                            className="hover:text-gray-600"
                           >
                             <X className="h-3 w-3" />
                           </button>
@@ -682,13 +682,13 @@ export default function NewOpleidingPage() {
                       {formData.documents.map((doc) => (
                         <span
                           key={doc}
-                          className="px-2 py-1 bg-green-100 text-green-800 rounded text-sm flex items-center gap-1"
+                          className="px-2 py-1 bg-gray-100 text-gray-600 rounded text-sm flex items-center gap-1"
                         >
                           {doc.substring(0, 30)}...
                           <button
                             type="button"
                             onClick={() => removeDocument(doc)}
-                            className="hover:text-green-600"
+                            className="hover:text-gray-600"
                           >
                             <X className="h-3 w-3" />
                           </button>
@@ -722,11 +722,11 @@ export default function NewOpleidingPage() {
                 </div>
                 <div className="flex gap-2">
                   {currentStep < 5 ? (
-                    <Button type="button" onClick={nextStep} className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800">
+                    <Button type="button" onClick={nextStep} className="bg-gradient-to-r from-gray-800 to-black hover:from-gray-800 hover:to-black">
                       Next
                     </Button>
                   ) : (
-                    <Button type="submit" disabled={loading} className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800">
+                    <Button type="submit" disabled={loading} className="bg-gradient-to-r from-gray-800 to-black hover:from-gray-800 hover:to-black">
                       {loading ? "Creating..." : "Create Opleiding"}
                     </Button>
                   )}

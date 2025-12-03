@@ -134,21 +134,77 @@ model VerificationToken {
 
 model Job {
   id          String      @id @default(cuid())
-  title       String
-  description String      @db.Text
-  requirements String     @db.Text
-  location    String
-  salaryMin   Int?
-  salaryMax   Int?
-  type        JobType
-  category    JobCategory
-  isExpired   Boolean     @default(false)
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-  createdById String
+  
+  // Basic job info
+  title                String
+  companyName          String
+  category             String
+  jobType              String       // full-time, part-time, contract, internship, freelance
+  seniorityLevel       String       // junior, mid-level, senior, lead
+  employmentType       String       // on-site, hybrid, remote
 
-  createdBy   User        @relation("JobCreator", fields: [createdById], references: [id], onDelete: Cascade)
-  applications Application[]
+  // Location & expat-specific
+  country              String
+  city                 String
+  relocationSupport    Boolean      @default(false)
+  visaSponsorship      Boolean      @default(false)
+  visaType             String?
+  housingSupport       Boolean      @default(false)
+  relocationPackage    String?      @db.Text
+
+  // Job description details
+  shortDescription     String       @db.Text
+  fullDescription      String       @db.Text
+  responsibilities     String[]
+  requirements         String[]
+  requiredLanguages    String[]
+  optionalSkills       String[]
+
+  // Salary & benefits
+  salaryMin            Float?
+  salaryMax            Float?
+  currency             String?
+  bonusOptions         String?      @db.Text
+  extraBenefits        String[]
+
+  // Application requirements
+  requiredDocuments    String[]
+  interviewRequired    Boolean      @default(false)
+  interviewFormat      String?      // online, physical
+  additionalTests      String[]
+
+  // Process timeline
+  applicationDeadline  DateTime?
+  hiringTimeline       String?
+  startDate            DateTime?
+  positionsAvailable   Int          @default(1)
+
+  // Media
+  logoUrl              String?
+  bannerUrl            String?
+  promoVideoUrl        String?
+
+  // Internal
+  isVisible            Boolean      @default(true)
+  tags                 String[]
+  documents            String[]
+
+  // Legacy fields (for backward compatibility during migration)
+  description          String?      @db.Text @map("description_legacy")
+  requirements_legacy  String?      @db.Text @map("requirements_legacy")
+  location             String?      @map("location_legacy")
+  type                 JobType?     @map("type_legacy")
+  category_legacy      JobCategory? @map("category_legacy")
+  salaryMin_legacy     Int?         @map("salaryMin_legacy")
+  salaryMax_legacy     Int?         @map("salaryMax_legacy")
+  
+  isExpired            Boolean      @default(false)
+  createdAt            DateTime     @default(now())
+  updatedAt            DateTime     @updatedAt
+  createdById          String
+
+  createdBy            User         @relation("JobCreator", fields: [createdById], references: [id], onDelete: Cascade)
+  applications         Application[]
 
   @@map("jobs")
 }

@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { ApplicationList } from "@/components/application-list"
-import { Edit, Trash2, Archive, ArchiveRestore, MapPin, Briefcase, Calendar, DollarSign } from "lucide-react"
+import { Edit, Trash2, Archive, ArchiveRestore, MapPin, Briefcase, Calendar, DollarSign, Building2, Award, CheckCircle, XCircle, Clock, Users, Globe } from "lucide-react"
 import {
   Dialog,
   DialogContent,
@@ -21,15 +21,48 @@ import { ApplicationStatus } from "@prisma/client"
 interface Job {
   id: string
   title: string
-  description: string
-  requirements: string
-  location: string
+  companyName?: string
+  category: string
+  jobType?: string
+  seniorityLevel?: string
+  employmentType?: string
+  country?: string
+  city?: string
+  location?: string
+  relocationSupport?: boolean
+  visaSponsorship?: boolean
+  visaType?: string | null
+  housingSupport?: boolean
+  relocationPackage?: string | null
+  shortDescription?: string
+  fullDescription?: string
+  description?: string
+  responsibilities?: string[]
+  requirements?: string[]
+  requirements_legacy?: string
+  requiredLanguages?: string[]
+  optionalSkills?: string[]
   salaryMin: number | null
   salaryMax: number | null
-  type: string
-  category: string
+  currency?: string | null
+  bonusOptions?: string | null
+  extraBenefits?: string[]
+  requiredDocuments?: string[]
+  interviewRequired?: boolean
+  interviewFormat?: string | null
+  additionalTests?: string[]
+  applicationDeadline?: string | Date | null
+  hiringTimeline?: string | null
+  startDate?: string | Date | null
+  positionsAvailable?: number
+  logoUrl?: string | null
+  bannerUrl?: string | null
+  promoVideoUrl?: string | null
+  tags?: string[]
+  documents?: string[]
+  type?: string
   isExpired: boolean
-  createdAt: string
+  createdAt: string | Date
   applications: Array<{
     id: string
     status: ApplicationStatus
@@ -63,7 +96,7 @@ export default function ManageJobPage() {
         const appsResponse = await fetch(`/api/jobs/${params.id}/applications`)
         const applications = appsResponse.ok ? await appsResponse.json() : []
         
-        // Convert createdAt strings to Date objects - ensure it's always a Date
+        // Convert createdAt strings to Date objects
         const applicationsWithDates = applications.map((app: any) => ({
           ...app,
           createdAt: app.createdAt instanceof Date ? app.createdAt : new Date(app.createdAt || Date.now()),
@@ -79,7 +112,11 @@ export default function ManageJobPage() {
           }
         }>
         
-        setJob({ ...jobData, applications: applicationsWithDates })
+        setJob({ 
+          ...jobData, 
+          createdAt: jobData.createdAt instanceof Date ? jobData.createdAt : new Date(jobData.createdAt || Date.now()),
+          applications: applicationsWithDates 
+        })
       } catch (error) {
         console.error("Error fetching job:", error)
       } finally {
@@ -106,6 +143,7 @@ export default function ManageJobPage() {
       toast({
         title: "Success!",
         description: "Job deleted successfully",
+        variant: "success",
       })
 
       router.push("/ambassador")
@@ -138,11 +176,12 @@ export default function ManageJobPage() {
       }
 
       const updated = await response.json()
-      setJob(updated)
+      setJob({ ...job, ...updated })
 
       toast({
         title: "Success!",
         description: `Job ${updated.isExpired ? "marked as expired" : "reactivated"}`,
+        variant: "success",
       })
 
       router.refresh()
@@ -157,7 +196,7 @@ export default function ManageJobPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-white flex items-center justify-center">
         <p>Loading...</p>
       </div>
     )
@@ -165,7 +204,7 @@ export default function ManageJobPage() {
 
   if (!job) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-white flex items-center justify-center">
         <Card>
           <CardContent className="pt-6">
             <p>Job not found</p>
@@ -176,7 +215,7 @@ export default function ManageJobPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
+    <div className="min-h-screen bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex items-center justify-between mb-6">
           <Link href="/ambassador">
@@ -184,7 +223,7 @@ export default function ManageJobPage() {
           </Link>
           <div className="flex gap-2">
             {job.isExpired && (
-              <span className="px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm font-medium">
+              <span className="px-3 py-1 bg-gray-100 text-gray-800 rounded-full text-sm font-medium">
                 Expired
               </span>
             )}
@@ -198,7 +237,7 @@ export default function ManageJobPage() {
               variant="outline"
               size="sm"
               onClick={handleToggleExpired}
-              className={job.isExpired ? "text-green-600 hover:text-green-700" : "text-orange-600 hover:text-orange-700"}
+              className="text-gray-600 hover:text-gray-700"
             >
               {job.isExpired ? (
                 <>
@@ -227,25 +266,50 @@ export default function ManageJobPage() {
           <Card className="lg:col-span-1 border-0 shadow-lg">
             <CardHeader>
               <CardTitle className="text-2xl">{job.title}</CardTitle>
+              <CardDescription className="mt-2">
+                {job.companyName || "Company not specified"}
+              </CardDescription>
               <CardDescription className="flex items-center gap-1 mt-2">
                 <MapPin className="h-4 w-4" />
-                {job.location}
+                {job.city && job.country ? `${job.city}, ${job.country}` : job.location || "Location not specified"}
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-3 text-sm">
                 <div className="flex items-center gap-2">
                   <Briefcase className="h-4 w-4 text-gray-500" />
-                  <span><span className="font-semibold">Category:</span> {job.category.replace(/_/g, " ")}</span>
+                  <span><span className="font-semibold">Category:</span> {job.category}</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Calendar className="h-4 w-4 text-gray-500" />
-                  <span><span className="font-semibold">Type:</span> {job.type.replace(/_/g, " ")}</span>
-                </div>
+                {job.jobType && (
+                  <div className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4 text-gray-500" />
+                    <span><span className="font-semibold">Type:</span> {job.jobType.replace(/-/g, " ")}</span>
+                  </div>
+                )}
+                {job.seniorityLevel && (
+                  <div className="flex items-center gap-2">
+                    <Award className="h-4 w-4 text-gray-500" />
+                    <span><span className="font-semibold">Seniority:</span> {job.seniorityLevel.replace(/-/g, " ")}</span>
+                  </div>
+                )}
+                {job.employmentType && (
+                  <div className="flex items-center gap-2">
+                    <Building2 className="h-4 w-4 text-gray-500" />
+                    <span><span className="font-semibold">Work Type:</span> {job.employmentType.replace(/-/g, " ")}</span>
+                  </div>
+                )}
                 {job.salaryMin && job.salaryMax && (
                   <div className="flex items-center gap-2">
                     <DollarSign className="h-4 w-4 text-gray-500" />
-                    <span><span className="font-semibold">Salary:</span> ${job.salaryMin.toLocaleString()} - ${job.salaryMax.toLocaleString()}</span>
+                    <span>
+                      <span className="font-semibold">Salary:</span> {job.currency || "EUR"} {job.salaryMin.toLocaleString()} - {job.salaryMax.toLocaleString()}
+                    </span>
+                  </div>
+                )}
+                {job.positionsAvailable && job.positionsAvailable > 1 && (
+                  <div className="flex items-center gap-2">
+                    <Users className="h-4 w-4 text-gray-500" />
+                    <span><span className="font-semibold">Positions:</span> {job.positionsAvailable}</span>
                   </div>
                 )}
                 <div className="pt-3 border-t">
@@ -262,14 +326,120 @@ export default function ManageJobPage() {
               <CardTitle>Job Details</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
+              {/* Short Description */}
+              {job.shortDescription && (
+                <div>
+                  <h3 className="text-lg font-semibold mb-2">Overview</h3>
+                  <p className="text-gray-700 whitespace-pre-wrap">{job.shortDescription}</p>
+                </div>
+              )}
+
+              {/* Full Description */}
+              {job.fullDescription && (
+                <div>
+                  <h3 className="text-lg font-semibold mb-2">Job Description</h3>
+                  <p className="text-gray-700 whitespace-pre-wrap">{job.fullDescription}</p>
+                </div>
+              )}
+
+              {/* Legacy Description (fallback) */}
+              {!job.fullDescription && job.description && (
+                <div>
+                  <h3 className="text-lg font-semibold mb-2">Description</h3>
+                  <p className="text-gray-700 whitespace-pre-wrap">{job.description}</p>
+                </div>
+              )}
+
+              {/* Responsibilities */}
+              {job.responsibilities && job.responsibilities.length > 0 && (
+                <div>
+                  <h3 className="text-lg font-semibold mb-2">Responsibilities</h3>
+                  <ul className="list-disc list-inside space-y-1 text-gray-700">
+                    {job.responsibilities.map((resp, idx) => (
+                      <li key={idx}>{resp}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {/* Requirements */}
+              {job.requirements && job.requirements.length > 0 && (
+                <div>
+                  <h3 className="text-lg font-semibold mb-2">Requirements</h3>
+                  <ul className="list-disc list-inside space-y-1 text-gray-700">
+                    {job.requirements.map((req, idx) => (
+                      <li key={idx}>{req}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {/* Legacy Requirements (fallback) */}
+              {(!job.requirements || job.requirements.length === 0) && job.requirements_legacy && (
+                <div>
+                  <h3 className="text-lg font-semibold mb-2">Requirements</h3>
+                  <p className="text-gray-700 whitespace-pre-wrap">{job.requirements_legacy}</p>
+                </div>
+              )}
+
+              {/* Location & Expat Details */}
               <div>
-                <h3 className="text-lg font-semibold mb-2">Description</h3>
-                <p className="text-gray-700 whitespace-pre-wrap">{job.description}</p>
+                <h3 className="text-lg font-semibold mb-3">Location & Relocation Support</h3>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    {job.relocationSupport ? (
+                      <CheckCircle className="h-4 w-4 text-gray-600" />
+                    ) : (
+                      <XCircle className="h-4 w-4 text-gray-400" />
+                    )}
+                    <span className="text-sm text-gray-700">Relocation support</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {job.visaSponsorship ? (
+                      <CheckCircle className="h-4 w-4 text-gray-600" />
+                    ) : (
+                      <XCircle className="h-4 w-4 text-gray-400" />
+                    )}
+                    <span className="text-sm text-gray-700">Visa sponsorship</span>
+                    {job.visaType && <span className="text-xs text-gray-500">({job.visaType})</span>}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {job.housingSupport ? (
+                      <CheckCircle className="h-4 w-4 text-gray-600" />
+                    ) : (
+                      <XCircle className="h-4 w-4 text-gray-400" />
+                    )}
+                    <span className="text-sm text-gray-700">Housing support</span>
+                  </div>
+                </div>
               </div>
-              <div>
-                <h3 className="text-lg font-semibold mb-2">Requirements</h3>
-                <p className="text-gray-700 whitespace-pre-wrap">{job.requirements}</p>
-              </div>
+
+              {/* Timeline */}
+              {(job.applicationDeadline || job.hiringTimeline || job.startDate) && (
+                <div>
+                  <h3 className="text-lg font-semibold mb-2">Timeline</h3>
+                  <div className="space-y-1 text-sm text-gray-700">
+                    {job.applicationDeadline && (
+                      <div className="flex items-center gap-2">
+                        <Clock className="h-4 w-4" />
+                        <span>Deadline: {new Date(job.applicationDeadline).toLocaleDateString()}</span>
+                      </div>
+                    )}
+                    {job.hiringTimeline && (
+                      <div className="flex items-center gap-2">
+                        <Clock className="h-4 w-4" />
+                        <span>Hiring Timeline: {job.hiringTimeline}</span>
+                      </div>
+                    )}
+                    {job.startDate && (
+                      <div className="flex items-center gap-2">
+                        <Calendar className="h-4 w-4" />
+                        <span>Start Date: {new Date(job.startDate).toLocaleDateString()}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>

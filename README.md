@@ -5,7 +5,7 @@ A modern, production-ready job platform built with Next.js 14, React, TypeScript
 ## Features
 
 ### User Types
-- **Student**: Browse and apply to jobs and trainings
+- **Student**: Browse and apply to jobs and study abroad programs
 - **Expert**: Enhanced profile with expertise and portfolio
 - **Ambassador**: Create job postings and opleidingen (requires verification)
 - **Admin**: Full platform management and analytics
@@ -97,7 +97,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 The application uses Prisma with PostgreSQL. Key models:
 - **User**: Users with role-based access (STUDENT, EXPERT, AMBASSADOR, ADMIN)
 - **Job**: Job postings created by Admins and Ambassadors
-- **Opleiding**: Training/course postings
+- **Opleiding**: Study abroad program/enrollment postings
 - **Application**: Applications to jobs or opleidingen with status tracking
 
 ## Role-Based Access Control

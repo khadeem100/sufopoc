@@ -3,7 +3,6 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { z } from "zod"
-import { JobType, JobCategory } from "@prisma/client"
 
 export async function GET(
   req: Request,
@@ -12,6 +11,14 @@ export async function GET(
   try {
     const job = await prisma.job.findUnique({
       where: { id: params.id },
+      include: {
+        createdBy: {
+          select: {
+            name: true,
+            email: true,
+          },
+        },
+      },
     })
 
     if (!job) {
@@ -29,14 +36,59 @@ export async function GET(
 }
 
 const updateJobSchema = z.object({
+  // Basic job info
   title: z.string().min(1).optional(),
-  description: z.string().min(1).optional(),
-  requirements: z.string().min(1).optional(),
-  location: z.string().min(1).optional(),
+  companyName: z.string().min(1).optional(),
+  category: z.string().min(1).optional(),
+  jobType: z.string().min(1).optional(),
+  seniorityLevel: z.string().min(1).optional(),
+  employmentType: z.string().min(1).optional(),
+
+  // Location & expat-specific
+  country: z.string().min(1).optional(),
+  city: z.string().min(1).optional(),
+  relocationSupport: z.boolean().optional(),
+  visaSponsorship: z.boolean().optional(),
+  visaType: z.string().nullable().optional(),
+  housingSupport: z.boolean().optional(),
+  relocationPackage: z.string().nullable().optional(),
+
+  // Job description details
+  shortDescription: z.string().min(1).optional(),
+  fullDescription: z.string().min(1).optional(),
+  responsibilities: z.array(z.string()).optional(),
+  requirements: z.array(z.string()).optional(),
+  requiredLanguages: z.array(z.string()).optional(),
+  optionalSkills: z.array(z.string()).optional(),
+
+  // Salary & benefits
   salaryMin: z.number().nullable().optional(),
   salaryMax: z.number().nullable().optional(),
-  type: z.nativeEnum(JobType).optional(),
-  category: z.nativeEnum(JobCategory).optional(),
+  currency: z.string().nullable().optional(),
+  bonusOptions: z.string().nullable().optional(),
+  extraBenefits: z.array(z.string()).optional(),
+
+  // Application requirements
+  requiredDocuments: z.array(z.string()).optional(),
+  interviewRequired: z.boolean().optional(),
+  interviewFormat: z.string().nullable().optional(),
+  additionalTests: z.array(z.string()).optional(),
+
+  // Process timeline
+  applicationDeadline: z.string().nullable().optional(),
+  hiringTimeline: z.string().nullable().optional(),
+  startDate: z.string().nullable().optional(),
+  positionsAvailable: z.number().int().positive().optional(),
+
+  // Media
+  logoUrl: z.string().nullable().optional(),
+  bannerUrl: z.string().nullable().optional(),
+  promoVideoUrl: z.string().nullable().optional(),
+
+  // Internal
+  isVisible: z.boolean().optional(),
+  tags: z.array(z.string()).optional(),
+  documents: z.array(z.string()).optional(),
   isExpired: z.boolean().optional(),
 })
 
@@ -64,11 +116,53 @@ export async function PATCH(
     }
 
     const body = await req.json()
-    const validatedData = updateJobSchema.parse(body)
+
+    // Preprocess data: convert empty strings to null for optional fields
+    const preprocessedData: any = { ...body }
+    
+    if ('visaType' in body) preprocessedData.visaType = body.visaType === "" ? null : body.visaType
+    if ('relocationPackage' in body) preprocessedData.relocationPackage = body.relocationPackage === "" ? null : body.relocationPackage
+    if ('currency' in body) preprocessedData.currency = body.currency === "" ? null : body.currency
+    if ('bonusOptions' in body) preprocessedData.bonusOptions = body.bonusOptions === "" ? null : body.bonusOptions
+    if ('interviewFormat' in body) preprocessedData.interviewFormat = body.interviewFormat === "" ? null : body.interviewFormat
+    if ('hiringTimeline' in body) preprocessedData.hiringTimeline = body.hiringTimeline === "" ? null : body.hiringTimeline
+    if ('logoUrl' in body) preprocessedData.logoUrl = body.logoUrl === "" ? null : body.logoUrl
+    if ('bannerUrl' in body) preprocessedData.bannerUrl = body.bannerUrl === "" ? null : body.bannerUrl
+    if ('promoVideoUrl' in body) preprocessedData.promoVideoUrl = body.promoVideoUrl === "" ? null : body.promoVideoUrl
+    
+    if ('applicationDeadline' in body && body.applicationDeadline !== null && body.applicationDeadline !== "") {
+      preprocessedData.applicationDeadline = new Date(body.applicationDeadline)
+    } else if ('applicationDeadline' in body && body.applicationDeadline === "") {
+      preprocessedData.applicationDeadline = null
+    }
+    
+    if ('startDate' in body && body.startDate !== null && body.startDate !== "") {
+      preprocessedData.startDate = new Date(body.startDate)
+    } else if ('startDate' in body && body.startDate === "") {
+      preprocessedData.startDate = null
+    }
+
+    if ('salaryMin' in body) {
+      preprocessedData.salaryMin = body.salaryMin === "" || body.salaryMin === null ? null : parseFloat(body.salaryMin)
+    }
+    if ('salaryMax' in body) {
+      preprocessedData.salaryMax = body.salaryMax === "" || body.salaryMax === null ? null : parseFloat(body.salaryMax)
+    }
+
+    const validatedData = updateJobSchema.parse(preprocessedData)
+
+    // Convert date strings to Date objects if present
+    const updateData: any = { ...validatedData }
+    if (validatedData.applicationDeadline !== undefined) {
+      updateData.applicationDeadline = validatedData.applicationDeadline ? new Date(validatedData.applicationDeadline) : null
+    }
+    if (validatedData.startDate !== undefined) {
+      updateData.startDate = validatedData.startDate ? new Date(validatedData.startDate) : null
+    }
 
     const updated = await prisma.job.update({
       where: { id: params.id },
-      data: validatedData,
+      data: updateData,
     })
 
     return NextResponse.json(updated)
@@ -124,4 +218,3 @@ export async function DELETE(
     )
   }
 }
-

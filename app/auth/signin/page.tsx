@@ -1,8 +1,8 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { signIn } from "next-auth/react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -11,10 +11,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 
 export default function SignInPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
+  
+  const callbackUrl = searchParams.get("callbackUrl") || "/"
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -34,8 +37,8 @@ export default function SignInPage() {
         return
       }
 
-      // Redirect based on role
-      router.push("/")
+      // Redirect to callback URL or home
+      router.push(callbackUrl)
       router.refresh()
     } catch (error) {
       setError("Something went wrong. Please try again.")
@@ -55,7 +58,7 @@ export default function SignInPage() {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+              <div className="bg-gray-100 border border-gray-300 text-gray-600 px-4 py-3 rounded">
                 {error}
               </div>
             )}
@@ -86,7 +89,10 @@ export default function SignInPage() {
           </form>
           <div className="mt-4 text-center text-sm text-gray-600">
             Don't have an account?{" "}
-            <Link href="/auth/signup" className="text-black underline">
+            <Link 
+              href={`/auth/signup${callbackUrl ? `?callbackUrl=${encodeURIComponent(callbackUrl)}` : ""}`} 
+              className="text-black underline"
+            >
               Sign up
             </Link>
           </div>

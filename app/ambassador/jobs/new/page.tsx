@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -14,30 +14,144 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { Checkbox } from "@/components/ui/checkbox"
 import Link from "next/link"
-import { JobType, JobCategory } from "@prisma/client"
 import { useToast } from "@/hooks/use-toast"
+import { Plus, X, ArrowLeft, ArrowRight } from "lucide-react"
+
+const JOB_TYPES = ["full-time", "part-time", "contract", "internship", "freelance"]
+const SENIORITY_LEVELS = ["junior", "mid-level", "senior", "lead"]
+const EMPLOYMENT_TYPES = ["on-site", "hybrid", "remote"]
+const CURRENCIES = ["EUR", "USD", "GBP", "SEK", "NOK", "DKK", "PLN", "CZK"]
+const INTERVIEW_FORMATS = ["online", "physical"]
+const REQUIRED_DOCUMENTS_OPTIONS = [
+  "Passport",
+  "CV",
+  "Motivation letter",
+  "Diploma",
+  "Skills certificate",
+]
+const EXTRA_BENEFITS_OPTIONS = [
+  "Health insurance",
+  "Paid relocation",
+  "Flight reimbursement",
+  "Company housing",
+  "Transportation allowance",
+]
 
 export default function NewJobPage() {
   const router = useRouter()
   const { toast } = useToast()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
+  const [currentStep, setCurrentStep] = useState(1)
+  const [mounted, setMounted] = useState(false)
   const [formData, setFormData] = useState({
+    // Basic job info
     title: "",
-    description: "",
-    requirements: "",
-    location: "",
+    companyName: "",
+    category: "",
+    jobType: "",
+    seniorityLevel: "",
+    employmentType: "",
+
+    // Location & expat-specific
+    country: "",
+    city: "",
+    relocationSupport: false,
+    visaSponsorship: false,
+    visaType: "",
+    housingSupport: false,
+    relocationPackage: "",
+
+    // Job description details
+    shortDescription: "",
+    fullDescription: "",
+    responsibilities: [] as string[],
+    requirements: [] as string[],
+    requiredLanguages: [] as string[],
+    optionalSkills: [] as string[],
+
+    // Salary & benefits
     salaryMin: "",
     salaryMax: "",
-    type: "" as JobType | "",
-    category: "" as JobCategory | "",
+    currency: "",
+    bonusOptions: "",
+    extraBenefits: [] as string[],
+
+    // Application requirements
+    requiredDocuments: [] as string[],
+    interviewRequired: false,
+    interviewFormat: "",
+    additionalTests: [] as string[],
+
+    // Process timeline
+    applicationDeadline: "",
+    hiringTimeline: "",
+    startDate: "",
+    positionsAvailable: "1",
+
+    // Media
+    logoUrl: "",
+    bannerUrl: "",
+    promoVideoUrl: "",
+
+    // Internal
+    isVisible: true,
+    tags: [] as string[],
+    documents: [] as string[],
   })
+
+  const [newResponsibility, setNewResponsibility] = useState("")
+  const [newRequirement, setNewRequirement] = useState("")
+  const [newLanguage, setNewLanguage] = useState("")
+  const [newSkill, setNewSkill] = useState("")
+  const [newTag, setNewTag] = useState("")
+  const [newTest, setNewTest] = useState("")
+  const [newDocument, setNewDocument] = useState("")
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  const addItem = (field: string, value: string, setter: (val: string) => void) => {
+    if (value.trim() && !formData[field as keyof typeof formData].includes(value.trim())) {
+      setFormData({
+        ...formData,
+        [field]: [...(formData[field as keyof typeof formData] as string[]), value.trim()],
+      })
+      setter("")
+    }
+  }
+
+  const removeItem = (field: string, index: number) => {
+    const newArray = [...(formData[field as keyof typeof formData] as string[])]
+    newArray.splice(index, 1)
+    setFormData({ ...formData, [field]: newArray })
+  }
+
+  const toggleArrayItem = (field: string, value: string) => {
+    const current = formData[field as keyof typeof formData] as string[]
+    if (current.includes(value)) {
+      setFormData({ ...formData, [field]: current.filter((item) => item !== value) })
+    } else {
+      setFormData({ ...formData, [field]: [...current, value] })
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError("")
+
+    // Validation
+    if (!formData.title || !formData.companyName || !formData.category || !formData.jobType || 
+        !formData.seniorityLevel || !formData.employmentType || !formData.country || !formData.city ||
+        !formData.shortDescription || !formData.fullDescription) {
+      setError("Please fill in all required fields")
+      setLoading(false)
+      return
+    }
 
     try {
       const response = await fetch("/api/jobs", {
@@ -45,8 +159,20 @@ export default function NewJobPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...formData,
-          salaryMin: formData.salaryMin ? parseInt(formData.salaryMin) : null,
-          salaryMax: formData.salaryMax ? parseInt(formData.salaryMax) : null,
+          salaryMin: formData.salaryMin ? parseFloat(formData.salaryMin) : null,
+          salaryMax: formData.salaryMax ? parseFloat(formData.salaryMax) : null,
+          positionsAvailable: parseInt(formData.positionsAvailable) || 1,
+          visaType: formData.visaType || null,
+          relocationPackage: formData.relocationPackage || null,
+          currency: formData.currency || null,
+          bonusOptions: formData.bonusOptions || null,
+          interviewFormat: formData.interviewFormat || null,
+          hiringTimeline: formData.hiringTimeline || null,
+          logoUrl: formData.logoUrl || null,
+          bannerUrl: formData.bannerUrl || null,
+          promoVideoUrl: formData.promoVideoUrl || null,
+          applicationDeadline: formData.applicationDeadline || null,
+          startDate: formData.startDate || null,
         }),
       })
 
@@ -77,136 +203,779 @@ export default function NewJobPage() {
     }
   }
 
+  if (!mounted) {
+    return null
+  }
+
+  const totalSteps = 6
+
   return (
     <div className="min-h-screen bg-white">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Link href="/ambassador">
-          <Button variant="ghost" className="mb-4">← Back to Dashboard</Button>
+          <Button variant="ghost" className="mb-4">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Dashboard
+          </Button>
         </Link>
 
         <Card>
           <CardHeader>
             <CardTitle>Create New Job</CardTitle>
-            <CardDescription>Post a new job opportunity</CardDescription>
+            <CardDescription>
+              Step {currentStep} of {totalSteps}: {currentStep === 1 && "Basic Information"}
+              {currentStep === 2 && "Location & Expat Details"}
+              {currentStep === 3 && "Job Description"}
+              {currentStep === 4 && "Salary & Benefits"}
+              {currentStep === 5 && "Application Requirements"}
+              {currentStep === 6 && "Media & Final Details"}
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit}>
               {error && (
-                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+                <div className="bg-gray-50 border border-gray-200 text-gray-700 px-4 py-3 rounded mb-4">
                   {error}
                 </div>
               )}
-              <div className="space-y-2">
-                <Label htmlFor="title">Job Title *</Label>
-                <Input
-                  id="title"
-                  value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  required
-                />
-              </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="description">Description *</Label>
-                <Textarea
-                  id="description"
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  rows={6}
-                  required
-                />
-              </div>
+              {/* Step 1: Basic Information */}
+              {currentStep === 1 && (
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="title">Job Title *</Label>
+                    <Input
+                      id="title"
+                      value={formData.title}
+                      onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                      required
+                    />
+                  </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="requirements">Requirements *</Label>
-                <Textarea
-                  id="requirements"
-                  value={formData.requirements}
-                  onChange={(e) => setFormData({ ...formData, requirements: e.target.value })}
-                  rows={4}
-                  required
-                />
-              </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="companyName">Company Name *</Label>
+                    <Input
+                      id="companyName"
+                      value={formData.companyName}
+                      onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
+                      required
+                    />
+                  </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="location">Location *</Label>
-                  <Input
-                    id="location"
-                    value={formData.location}
-                    onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                    required
-                  />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="category">Category *</Label>
+                      <Input
+                        id="category"
+                        value={formData.category}
+                        onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                        placeholder="e.g., Healthcare, IT, Engineering"
+                        required
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="jobType">Job Type *</Label>
+                      <Select
+                        value={formData.jobType}
+                        onValueChange={(value) => setFormData({ ...formData, jobType: value })}
+                        required
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select job type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {JOB_TYPES.map((type) => (
+                            <SelectItem key={type} value={type}>
+                              {type.charAt(0).toUpperCase() + type.slice(1).replace("-", " ")}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="seniorityLevel">Seniority Level *</Label>
+                      <Select
+                        value={formData.seniorityLevel}
+                        onValueChange={(value) => setFormData({ ...formData, seniorityLevel: value })}
+                        required
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select seniority" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {SENIORITY_LEVELS.map((level) => (
+                            <SelectItem key={level} value={level}>
+                              {level.charAt(0).toUpperCase() + level.slice(1).replace("-", " ")}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="employmentType">Employment Type *</Label>
+                      <Select
+                        value={formData.employmentType}
+                        onValueChange={(value) => setFormData({ ...formData, employmentType: value })}
+                        required
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select employment type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {EMPLOYMENT_TYPES.map((type) => (
+                            <SelectItem key={type} value={type}>
+                              {type.charAt(0).toUpperCase() + type.slice(1).replace("-", " ")}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
                 </div>
+              )}
 
-                <div className="space-y-2">
-                  <Label htmlFor="category">Category *</Label>
-                  <Select
-                    value={formData.category}
-                    onValueChange={(value) => setFormData({ ...formData, category: value as JobCategory })}
-                    required
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Object.values(JobCategory).map((cat) => (
-                        <SelectItem key={cat} value={cat}>
-                          {cat.replace(/_/g, " ")}
-                        </SelectItem>
+              {/* Step 2: Location & Expat Details */}
+              {currentStep === 2 && (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="country">Country *</Label>
+                      <Input
+                        id="country"
+                        value={formData.country}
+                        onChange={(e) => setFormData({ ...formData, country: e.target.value })}
+                        required
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="city">City *</Label>
+                      <Input
+                        id="city"
+                        value={formData.city}
+                        onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="relocationSupport"
+                        checked={formData.relocationSupport}
+                        onCheckedChange={(checked) =>
+                          setFormData({ ...formData, relocationSupport: checked as boolean })
+                        }
+                      />
+                      <Label htmlFor="relocationSupport">Does the company provide relocation support?</Label>
+                    </div>
+
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="visaSponsorship"
+                        checked={formData.visaSponsorship}
+                        onCheckedChange={(checked) =>
+                          setFormData({ ...formData, visaSponsorship: checked as boolean })
+                        }
+                      />
+                      <Label htmlFor="visaSponsorship">Does the company sponsor visas/work permits?</Label>
+                    </div>
+
+                    {formData.visaSponsorship && (
+                      <div className="space-y-2">
+                        <Label htmlFor="visaType">Type of visa provided</Label>
+                        <Input
+                          id="visaType"
+                          value={formData.visaType}
+                          onChange={(e) => setFormData({ ...formData, visaType: e.target.value })}
+                          placeholder="e.g., EU Blue Card, Work Permit"
+                        />
+                      </div>
+                    )}
+
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="housingSupport"
+                        checked={formData.housingSupport}
+                        onCheckedChange={(checked) =>
+                          setFormData({ ...formData, housingSupport: checked as boolean })
+                        }
+                      />
+                      <Label htmlFor="housingSupport">Is housing support provided?</Label>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="relocationPackage">Relocation Package Description</Label>
+                      <Textarea
+                        id="relocationPackage"
+                        value={formData.relocationPackage}
+                        onChange={(e) => setFormData({ ...formData, relocationPackage: e.target.value })}
+                        rows={4}
+                        placeholder="Describe the relocation package..."
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Step 3: Job Description */}
+              {currentStep === 3 && (
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="shortDescription">Short Description *</Label>
+                    <Textarea
+                      id="shortDescription"
+                      value={formData.shortDescription}
+                      onChange={(e) => setFormData({ ...formData, shortDescription: e.target.value })}
+                      rows={3}
+                      required
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="fullDescription">Full Job Description *</Label>
+                    <Textarea
+                      id="fullDescription"
+                      value={formData.fullDescription}
+                      onChange={(e) => setFormData({ ...formData, fullDescription: e.target.value })}
+                      rows={8}
+                      required
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Responsibilities</Label>
+                    <div className="flex gap-2">
+                      <Input
+                        value={newResponsibility}
+                        onChange={(e) => setNewResponsibility(e.target.value)}
+                        onKeyPress={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault()
+                            addItem("responsibilities", newResponsibility, setNewResponsibility)
+                          }
+                        }}
+                        placeholder="Add responsibility"
+                      />
+                      <Button
+                        type="button"
+                        onClick={() => addItem("responsibilities", newResponsibility, setNewResponsibility)}
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {formData.responsibilities.map((item, idx) => (
+                        <span
+                          key={idx}
+                          className="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm flex items-center gap-2"
+                        >
+                          {item}
+                          <button
+                            type="button"
+                            onClick={() => removeItem("responsibilities", idx)}
+                            className="hover:text-gray-600"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </span>
                       ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                    </div>
+                  </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="type">Job Type *</Label>
-                  <Select
-                    value={formData.type}
-                    onValueChange={(value) => setFormData({ ...formData, type: value as JobType })}
-                    required
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Object.values(JobType).map((type) => (
-                        <SelectItem key={type} value={type}>
-                          {type.replace(/_/g, " ")}
-                        </SelectItem>
+                  <div className="space-y-2">
+                    <Label>Requirements / Qualifications</Label>
+                    <div className="flex gap-2">
+                      <Input
+                        value={newRequirement}
+                        onChange={(e) => setNewRequirement(e.target.value)}
+                        onKeyPress={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault()
+                            addItem("requirements", newRequirement, setNewRequirement)
+                          }
+                        }}
+                        placeholder="Add requirement"
+                      />
+                      <Button
+                        type="button"
+                        onClick={() => addItem("requirements", newRequirement, setNewRequirement)}
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {formData.requirements.map((item, idx) => (
+                        <span
+                          key={idx}
+                          className="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm flex items-center gap-2"
+                        >
+                          {item}
+                          <button
+                            type="button"
+                            onClick={() => removeItem("requirements", idx)}
+                            className="hover:text-gray-600"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </span>
                       ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                    </div>
+                  </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="salaryMin">Salary Min</Label>
-                  <Input
-                    id="salaryMin"
-                    type="number"
-                    value={formData.salaryMin}
-                    onChange={(e) => setFormData({ ...formData, salaryMin: e.target.value })}
-                  />
-                </div>
+                  <div className="space-y-2">
+                    <Label>Required Languages</Label>
+                    <div className="flex gap-2">
+                      <Input
+                        value={newLanguage}
+                        onChange={(e) => setNewLanguage(e.target.value)}
+                        onKeyPress={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault()
+                            addItem("requiredLanguages", newLanguage, setNewLanguage)
+                          }
+                        }}
+                        placeholder="e.g., English B2, Dutch A2"
+                      />
+                      <Button
+                        type="button"
+                        onClick={() => addItem("requiredLanguages", newLanguage, setNewLanguage)}
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {formData.requiredLanguages.map((item, idx) => (
+                        <span
+                          key={idx}
+                          className="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm flex items-center gap-2"
+                        >
+                          {item}
+                          <button
+                            type="button"
+                            onClick={() => removeItem("requiredLanguages", idx)}
+                            className="hover:text-gray-600"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="salaryMax">Salary Max</Label>
-                  <Input
-                    id="salaryMax"
-                    type="number"
-                    value={formData.salaryMax}
-                    onChange={(e) => setFormData({ ...formData, salaryMax: e.target.value })}
-                  />
+                  <div className="space-y-2">
+                    <Label>Optional Skills</Label>
+                    <div className="flex gap-2">
+                      <Input
+                        value={newSkill}
+                        onChange={(e) => setNewSkill(e.target.value)}
+                        onKeyPress={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault()
+                            addItem("optionalSkills", newSkill, setNewSkill)
+                          }
+                        }}
+                        placeholder="Add skill"
+                      />
+                      <Button
+                        type="button"
+                        onClick={() => addItem("optionalSkills", newSkill, setNewSkill)}
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {formData.optionalSkills.map((item, idx) => (
+                        <span
+                          key={idx}
+                          className="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm flex items-center gap-2"
+                        >
+                          {item}
+                          <button
+                            type="button"
+                            onClick={() => removeItem("optionalSkills", idx)}
+                            className="hover:text-gray-600"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  </div>
                 </div>
-              </div>
+              )}
 
-              <div className="flex justify-end gap-4">
-                <Link href="/ambassador">
-                  <Button type="button" variant="outline">Cancel</Button>
-                </Link>
-                <Button type="submit" disabled={loading}>
-                  {loading ? "Creating..." : "Create Job"}
+              {/* Step 4: Salary & Benefits */}
+              {currentStep === 4 && (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="salaryMin">Salary Minimum</Label>
+                      <Input
+                        id="salaryMin"
+                        type="number"
+                        value={formData.salaryMin}
+                        onChange={(e) => setFormData({ ...formData, salaryMin: e.target.value })}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="salaryMax">Salary Maximum</Label>
+                      <Input
+                        id="salaryMax"
+                        type="number"
+                        value={formData.salaryMax}
+                        onChange={(e) => setFormData({ ...formData, salaryMax: e.target.value })}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="currency">Currency</Label>
+                      <Select
+                        value={formData.currency}
+                        onValueChange={(value) => setFormData({ ...formData, currency: value })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select currency" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {CURRENCIES.map((curr) => (
+                            <SelectItem key={curr} value={curr}>
+                              {curr}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="bonusOptions">Bonus Options</Label>
+                    <Textarea
+                      id="bonusOptions"
+                      value={formData.bonusOptions}
+                      onChange={(e) => setFormData({ ...formData, bonusOptions: e.target.value })}
+                      rows={3}
+                      placeholder="Describe bonus options..."
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Additional Benefits</Label>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                      {EXTRA_BENEFITS_OPTIONS.map((benefit) => (
+                        <div key={benefit} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`benefit-${benefit}`}
+                            checked={formData.extraBenefits.includes(benefit)}
+                            onCheckedChange={() => toggleArrayItem("extraBenefits", benefit)}
+                          />
+                          <Label htmlFor={`benefit-${benefit}`} className="text-sm font-normal">
+                            {benefit}
+                          </Label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Step 5: Application Requirements */}
+              {currentStep === 5 && (
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>Required Documents</Label>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                      {REQUIRED_DOCUMENTS_OPTIONS.map((doc) => (
+                        <div key={doc} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`doc-${doc}`}
+                            checked={formData.requiredDocuments.includes(doc)}
+                            onCheckedChange={() => toggleArrayItem("requiredDocuments", doc)}
+                          />
+                          <Label htmlFor={`doc-${doc}`} className="text-sm font-normal">
+                            {doc}
+                          </Label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="interviewRequired"
+                      checked={formData.interviewRequired}
+                      onCheckedChange={(checked) =>
+                        setFormData({ ...formData, interviewRequired: checked as boolean })
+                      }
+                    />
+                    <Label htmlFor="interviewRequired">Interview required?</Label>
+                  </div>
+
+                  {formData.interviewRequired && (
+                    <div className="space-y-2">
+                      <Label htmlFor="interviewFormat">Interview Format</Label>
+                      <Select
+                        value={formData.interviewFormat}
+                        onValueChange={(value) => setFormData({ ...formData, interviewFormat: value })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select format" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {INTERVIEW_FORMATS.map((format) => (
+                            <SelectItem key={format} value={format}>
+                              {format.charAt(0).toUpperCase() + format.slice(1)}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+
+                  <div className="space-y-2">
+                    <Label>Additional Tests</Label>
+                    <div className="flex gap-2">
+                      <Input
+                        value={newTest}
+                        onChange={(e) => setNewTest(e.target.value)}
+                        onKeyPress={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault()
+                            addItem("additionalTests", newTest, setNewTest)
+                          }
+                        }}
+                        placeholder="e.g., Language test, Technical test"
+                      />
+                      <Button
+                        type="button"
+                        onClick={() => addItem("additionalTests", newTest, setNewTest)}
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {formData.additionalTests.map((item, idx) => (
+                        <span
+                          key={idx}
+                          className="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm flex items-center gap-2"
+                        >
+                          {item}
+                          <button
+                            type="button"
+                            onClick={() => removeItem("additionalTests", idx)}
+                            className="hover:text-gray-600"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="applicationDeadline">Application Deadline</Label>
+                      <Input
+                        id="applicationDeadline"
+                        type="date"
+                        value={formData.applicationDeadline}
+                        onChange={(e) => setFormData({ ...formData, applicationDeadline: e.target.value })}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="startDate">Start Date</Label>
+                      <Input
+                        id="startDate"
+                        type="date"
+                        value={formData.startDate}
+                        onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="hiringTimeline">Expected Hiring Timeline</Label>
+                      <Input
+                        id="hiringTimeline"
+                        value={formData.hiringTimeline}
+                        onChange={(e) => setFormData({ ...formData, hiringTimeline: e.target.value })}
+                        placeholder="e.g., 3-6 weeks"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="positionsAvailable">Number of Available Positions</Label>
+                      <Input
+                        id="positionsAvailable"
+                        type="number"
+                        min="1"
+                        value={formData.positionsAvailable}
+                        onChange={(e) => setFormData({ ...formData, positionsAvailable: e.target.value })}
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Step 6: Media & Final Details */}
+              {currentStep === 6 && (
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="logoUrl">Company Logo URL</Label>
+                    <Input
+                      id="logoUrl"
+                      value={formData.logoUrl}
+                      onChange={(e) => setFormData({ ...formData, logoUrl: e.target.value })}
+                      placeholder="https://..."
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="bannerUrl">Banner Image URL</Label>
+                    <Input
+                      id="bannerUrl"
+                      value={formData.bannerUrl}
+                      onChange={(e) => setFormData({ ...formData, bannerUrl: e.target.value })}
+                      placeholder="https://..."
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="promoVideoUrl">Promo Video URL (Optional)</Label>
+                    <Input
+                      id="promoVideoUrl"
+                      value={formData.promoVideoUrl}
+                      onChange={(e) => setFormData({ ...formData, promoVideoUrl: e.target.value })}
+                      placeholder="https://..."
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Tags</Label>
+                    <div className="flex gap-2">
+                      <Input
+                        value={newTag}
+                        onChange={(e) => setNewTag(e.target.value)}
+                        onKeyPress={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault()
+                            addItem("tags", newTag, setNewTag)
+                          }
+                        }}
+                        placeholder="Add tag"
+                      />
+                      <Button
+                        type="button"
+                        onClick={() => addItem("tags", newTag, setNewTag)}
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {formData.tags.map((item, idx) => (
+                        <span
+                          key={idx}
+                          className="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm flex items-center gap-2"
+                        >
+                          {item}
+                          <button
+                            type="button"
+                            onClick={() => removeItem("tags", idx)}
+                            className="hover:text-gray-600"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Documents (PDF URLs)</Label>
+                    <div className="flex gap-2">
+                      <Input
+                        value={newDocument}
+                        onChange={(e) => setNewDocument(e.target.value)}
+                        onKeyPress={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault()
+                            addItem("documents", newDocument, setNewDocument)
+                          }
+                        }}
+                        placeholder="https://..."
+                      />
+                      <Button
+                        type="button"
+                        onClick={() => addItem("documents", newDocument, setNewDocument)}
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {formData.documents.map((item, idx) => (
+                        <span
+                          key={idx}
+                          className="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm flex items-center gap-2"
+                        >
+                          {item}
+                          <button
+                            type="button"
+                            onClick={() => removeItem("documents", idx)}
+                            className="hover:text-gray-600"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="isVisible"
+                      checked={formData.isVisible}
+                      onCheckedChange={(checked) =>
+                        setFormData({ ...formData, isVisible: checked as boolean })
+                      }
+                    />
+                    <Label htmlFor="isVisible">Job visibility (visible on website)</Label>
+                  </div>
+                </div>
+              )}
+
+              {/* Navigation Buttons */}
+              <div className="flex justify-between mt-8">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setCurrentStep(Math.max(1, currentStep - 1))}
+                  disabled={currentStep === 1}
+                >
+                  <ArrowLeft className="mr-2 h-4 w-4" />
+                  Previous
                 </Button>
+
+                {currentStep < totalSteps ? (
+                  <Button
+                    type="button"
+                    onClick={() => setCurrentStep(Math.min(totalSteps, currentStep + 1))}
+                    className="bg-black hover:bg-gray-800"
+                  >
+                    Next
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                ) : (
+                  <Button type="submit" disabled={loading} className="bg-black hover:bg-gray-800">
+                    {loading ? "Creating..." : "Create Job"}
+                  </Button>
+                )}
               </div>
             </form>
           </CardContent>
@@ -215,4 +984,3 @@ export default function NewJobPage() {
     </div>
   )
 }
-

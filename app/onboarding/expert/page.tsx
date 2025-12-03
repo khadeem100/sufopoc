@@ -90,9 +90,19 @@ export default function ExpertOnboardingPage() {
         description: "Je profiel is succesvol aangemaakt. Je wordt doorgestuurd naar je dashboard.",
       })
 
+      // Check if there's a callback URL from signup
+      const callbackUrl = typeof window !== "undefined" 
+        ? sessionStorage.getItem("onboardingCallbackUrl") 
+        : null
+      
       // Wait a moment to show the success message, then redirect
       setTimeout(() => {
-        router.push("/expert")
+        if (callbackUrl) {
+          sessionStorage.removeItem("onboardingCallbackUrl")
+          router.push(callbackUrl)
+        } else {
+          router.push("/expert")
+        }
         router.refresh()
       }, 1500)
     } catch (error) {
@@ -186,7 +196,7 @@ export default function ExpertOnboardingPage() {
                 <div className="space-y-2 mt-2">
                   {formData.portfolioLinks.map((link, index) => (
                     <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                      <a href={link} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-600">
+                      <a href={link} target="_blank" rel="noopener noreferrer" className="text-sm text-gray-600">
                         {link}
                       </a>
                       <button

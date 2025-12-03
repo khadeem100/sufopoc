@@ -57,7 +57,7 @@ export default async function OpleidingenPage({ searchParams }: OpleidingenPageP
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-black mb-2">Browse Opleidingen</h1>
-          <p className="text-gray-600">Discover training and development opportunities</p>
+          <p className="text-gray-600">Discover study abroad and enrollment opportunities</p>
         </div>
 
         {/* Filters */}
@@ -66,7 +66,7 @@ export default async function OpleidingenPage({ searchParams }: OpleidingenPageP
             <form action="/opleidingen" method="get" className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <Input
                 name="search"
-                placeholder="Training title..."
+                placeholder="Program title..."
                 defaultValue={searchParams.search}
               />
               <Input

@@ -85,9 +85,19 @@ export default function StudentOnboardingPage() {
         description: "Je profiel is succesvol aangemaakt. Je wordt doorgestuurd naar je dashboard.",
       })
 
+      // Check if there's a callback URL from signup
+      const callbackUrl = typeof window !== "undefined" 
+        ? sessionStorage.getItem("onboardingCallbackUrl") 
+        : null
+      
       // Wait a moment to show the success message, then redirect
       setTimeout(() => {
-        router.push("/student")
+        if (callbackUrl) {
+          sessionStorage.removeItem("onboardingCallbackUrl")
+          router.push(callbackUrl)
+        } else {
+          router.push("/student")
+        }
         router.refresh()
       }, 1500)
     } catch (error) {

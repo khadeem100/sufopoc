@@ -19,8 +19,11 @@ export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions)
     if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+      console.error("Onboarding attempt without session")
+      return NextResponse.json({ error: "Unauthorized. Please sign in first." }, { status: 401 })
     }
+    
+    console.log("Onboarding request for user:", session.user.id, "Role:", session.user.role)
 
     const body = await req.json()
     const validatedData = expertOnboardingSchema.parse(body)

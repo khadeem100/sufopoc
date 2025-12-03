@@ -70,7 +70,7 @@ export function ApplicationList({ applications }: ApplicationListProps) {
                     href={app.cvUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-sm text-blue-600 hover:underline mt-2 block"
+                    className="text-sm text-gray-600 hover:underline mt-2 block"
                   >
                     View CV
                   </a>
