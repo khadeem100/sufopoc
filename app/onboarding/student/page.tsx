@@ -271,7 +271,7 @@ export default function StudentOnboardingPage() {
                     variant={formData.interests.includes(category) ? "default" : "outline"}
                     onClick={() => toggleInterest(category)}
                   >
-                    {category.replace("_", " ")}
+                    {category.replace(/_/g, " ")}
                   </Button>
                 ))}
               </div>

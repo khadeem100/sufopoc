@@ -152,7 +152,7 @@ export default function NewJobPage() {
                     <SelectContent>
                       {Object.values(JobCategory).map((cat) => (
                         <SelectItem key={cat} value={cat}>
-                          {cat.replace("_", " ")}
+                          {cat.replace(/_/g, " ")}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -172,7 +172,7 @@ export default function NewJobPage() {
                     <SelectContent>
                       {Object.values(JobType).map((type) => (
                         <SelectItem key={type} value={type}>
-                          {type.replace("_", " ")}
+                          {type.replace(/_/g, " ")}
                         </SelectItem>
                       ))}
                     </SelectContent>

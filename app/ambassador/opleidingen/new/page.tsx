@@ -159,7 +159,7 @@ export default function NewOpleidingPage() {
                     <SelectContent>
                       {Object.values(JobCategory).map((cat) => (
                         <SelectItem key={cat} value={cat}>
-                          {cat.replace("_", " ")}
+                          {cat.replace(/_/g, " ")}
                         </SelectItem>
                       ))}
                     </SelectContent>

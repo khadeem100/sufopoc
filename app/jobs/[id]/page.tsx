@@ -46,7 +46,7 @@ export default async function JobDetailPage({ params }: { params: { id: string }
               <div>
                 <CardTitle className="text-3xl">{job.title}</CardTitle>
                 <CardDescription className="mt-2 text-base">
-                  Posted by {job.createdBy.name}
+                  Posted by {job.createdBy.name || "Unknown"}
                 </CardDescription>
               </div>
               {session?.user && (session.user.role === "STUDENT" || session.user.role === "EXPERT") && (
@@ -62,11 +62,11 @@ export default async function JobDetailPage({ params }: { params: { id: string }
               </div>
               <div className="flex items-center text-gray-600">
                 <Briefcase className="h-5 w-5 mr-2" />
-                {job.category.replace("_", " ")}
+                {job.category.replace(/_/g, " ")}
               </div>
               <div className="flex items-center text-gray-600">
                 <Calendar className="h-5 w-5 mr-2" />
-                {job.type.replace("_", " ")}
+                {job.type.replace(/_/g, " ")}
               </div>
               {job.salaryMin && job.salaryMax && (
                 <div className="flex items-center text-gray-600">

@@ -94,7 +94,7 @@ export function ApplicationList({ applications }: ApplicationListProps) {
                   <SelectContent>
                     {Object.values(ApplicationStatus).map((status) => (
                       <SelectItem key={status} value={status}>
-                        {status.replace("_", " ")}
+                        {status.replace(/_/g, " ")}
                       </SelectItem>
                     ))}
                   </SelectContent>

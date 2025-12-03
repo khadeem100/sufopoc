@@ -31,10 +31,10 @@ export default async function JobsPage({ searchParams }: JobsPageProps) {
   if (searchParams.location) {
     where.location = { contains: searchParams.location, mode: "insensitive" }
   }
-  if (searchParams.category) {
+  if (searchParams.category && searchParams.category !== "all") {
     where.category = searchParams.category as JobCategory
   }
-  if (searchParams.type) {
+  if (searchParams.type && searchParams.type !== "all") {
     where.type = searchParams.type as JobType
   }
 
@@ -74,28 +74,28 @@ export default async function JobsPage({ searchParams }: JobsPageProps) {
                 placeholder="Location..."
                 defaultValue={searchParams.location}
               />
-              <Select name="category" defaultValue={searchParams.category}>
+              <Select name="category" defaultValue={searchParams.category || "all"}>
                 <SelectTrigger>
                   <SelectValue placeholder="Category" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Categories</SelectItem>
+                  <SelectItem value="all">All Categories</SelectItem>
                   {Object.values(JobCategory).map((cat) => (
                     <SelectItem key={cat} value={cat}>
-                      {cat.replace("_", " ")}
+                      {cat.replace(/_/g, " ")}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-              <Select name="type" defaultValue={searchParams.type}>
+              <Select name="type" defaultValue={searchParams.type || "all"}>
                 <SelectTrigger>
                   <SelectValue placeholder="Job Type" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Types</SelectItem>
+                  <SelectItem value="all">All Types</SelectItem>
                   {Object.values(JobType).map((type) => (
                     <SelectItem key={type} value={type}>
-                      {type.replace("_", " ")}
+                      {type.replace(/_/g, " ")}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -121,7 +121,7 @@ export default async function JobsPage({ searchParams }: JobsPageProps) {
                     <div>
                       <CardTitle className="text-xl">{job.title}</CardTitle>
                       <CardDescription className="mt-1">
-                        {job.createdBy.name}
+                        {job.createdBy.name || "Unknown"}
                       </CardDescription>
                     </div>
                     <Link href={`/jobs/${job.id}`}>
@@ -137,11 +137,11 @@ export default async function JobsPage({ searchParams }: JobsPageProps) {
                     </div>
                     <div className="flex items-center">
                       <Briefcase className="h-4 w-4 mr-2" />
-                      {job.category.replace("_", " ")}
+                      {job.category.replace(/_/g, " ")}
                     </div>
                     <div className="flex items-center">
                       <Calendar className="h-4 w-4 mr-2" />
-                      {job.type.replace("_", " ")}
+                      {job.type.replace(/_/g, " ")}
                     </div>
                     {job.salaryMin && job.salaryMax && (
                       <div className="flex items-center">

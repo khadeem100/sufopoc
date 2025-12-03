@@ -48,8 +48,8 @@ export default async function ManageJobPage({ params }: { params: { id: string }
             </CardHeader>
             <CardContent>
               <div className="space-y-2 text-sm">
-                <p><span className="font-semibold">Type:</span> {job.type.replace("_", " ")}</p>
-                <p><span className="font-semibold">Category:</span> {job.category.replace("_", " ")}</p>
+                <p><span className="font-semibold">Type:</span> {job.type.replace(/_/g, " ")}</p>
+                <p><span className="font-semibold">Category:</span> {job.category.replace(/_/g, " ")}</p>
                 {job.salaryMin && job.salaryMax && (
                   <p><span className="font-semibold">Salary:</span> ${job.salaryMin.toLocaleString()} - ${job.salaryMax.toLocaleString()}</p>
                 )}

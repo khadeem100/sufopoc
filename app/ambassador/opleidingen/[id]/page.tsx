@@ -50,7 +50,7 @@ export default async function ManageOpleidingPage({ params }: { params: { id: st
             </CardHeader>
             <CardContent>
               <div className="space-y-2 text-sm">
-                <p><span className="font-semibold">Category:</span> {opleiding.category.replace("_", " ")}</p>
+                <p><span className="font-semibold">Category:</span> {opleiding.category.replace(/_/g, " ")}</p>
                 {opleiding.duration && (
                   <p><span className="font-semibold">Duration:</span> {opleiding.duration}</p>
                 )}

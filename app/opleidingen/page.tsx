@@ -30,7 +30,7 @@ export default async function OpleidingenPage({ searchParams }: OpleidingenPageP
   if (searchParams.location) {
     where.location = { contains: searchParams.location, mode: "insensitive" }
   }
-  if (searchParams.category) {
+  if (searchParams.category && searchParams.category !== "all") {
     where.category = searchParams.category as JobCategory
   }
 
@@ -70,15 +70,15 @@ export default async function OpleidingenPage({ searchParams }: OpleidingenPageP
                 placeholder="Location..."
                 defaultValue={searchParams.location}
               />
-              <Select name="category" defaultValue={searchParams.category}>
+              <Select name="category" defaultValue={searchParams.category || "all"}>
                 <SelectTrigger>
                   <SelectValue placeholder="Category" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Categories</SelectItem>
+                  <SelectItem value="all">All Categories</SelectItem>
                   {Object.values(JobCategory).map((cat) => (
                     <SelectItem key={cat} value={cat}>
-                      {cat.replace("_", " ")}
+                      {cat.replace(/_/g, " ")}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -104,7 +104,7 @@ export default async function OpleidingenPage({ searchParams }: OpleidingenPageP
                     <div>
                       <CardTitle className="text-xl">{opleiding.title}</CardTitle>
                       <CardDescription className="mt-1">
-                        {opleiding.createdBy.name}
+                        {opleiding.createdBy.name || "Unknown"}
                       </CardDescription>
                     </div>
                     <Link href={`/opleidingen/${opleiding.id}`}>
@@ -122,7 +122,7 @@ export default async function OpleidingenPage({ searchParams }: OpleidingenPageP
                     )}
                     <div className="flex items-center">
                       <GraduationCap className="h-4 w-4 mr-2" />
-                      {opleiding.category.replace("_", " ")}
+                      {opleiding.category.replace(/_/g, " ")}
                     </div>
                     {opleiding.duration && (
                       <div className="flex items-center">

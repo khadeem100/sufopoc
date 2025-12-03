@@ -164,7 +164,7 @@ export default async function StudentDashboard() {
                     <div key={opleiding.id} className="border-b pb-4 last:border-0">
                       <h4 className="font-semibold">{opleiding.title}</h4>
                       <p className="text-sm text-gray-600 mt-1">
-                        {opleiding.category.replace("_", " ")}
+                        {opleiding.category.replace(/_/g, " ")}
                       </p>
                       <Link href={`/opleidingen/${opleiding.id}`}>
                         <Button variant="outline" size="sm" className="mt-2">

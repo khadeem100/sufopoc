@@ -46,7 +46,7 @@ export default async function OpleidingDetailPage({ params }: { params: { id: st
               <div>
                 <CardTitle className="text-3xl">{opleiding.title}</CardTitle>
                 <CardDescription className="mt-2 text-base">
-                  Posted by {opleiding.createdBy.name}
+                  Posted by {opleiding.createdBy.name || "Unknown"}
                 </CardDescription>
               </div>
               {session?.user && (session.user.role === "STUDENT" || session.user.role === "EXPERT") && (
@@ -64,7 +64,7 @@ export default async function OpleidingDetailPage({ params }: { params: { id: st
               )}
               <div className="flex items-center text-gray-600">
                 <GraduationCap className="h-5 w-5 mr-2" />
-                {opleiding.category.replace("_", " ")}
+                {opleiding.category.replace(/_/g, " ")}
               </div>
               {opleiding.duration && (
                 <div className="flex items-center text-gray-600">
