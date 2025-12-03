@@ -43,6 +43,9 @@ export default async function AmbassadorDashboard() {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-8">
               <h1 className="text-xl font-semibold">Ambassador Dashboard</h1>
+              <Link href="/ambassador/applications">
+                <Button variant="ghost">Applications</Button>
+              </Link>
               <Link href="/jobs">
                 <Button variant="ghost">Browse Jobs</Button>
               </Link>

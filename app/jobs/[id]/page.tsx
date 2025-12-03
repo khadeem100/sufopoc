@@ -21,6 +21,21 @@ export default async function JobDetailPage({ params }: { params: { id: string }
     },
   })
 
+  // Check if user has already applied
+  let existingApplication = null
+  if (session?.user) {
+    existingApplication = await prisma.application.findFirst({
+      where: {
+        userId: session.user.id,
+        jobId: params.id,
+      },
+      select: {
+        id: true,
+        status: true,
+      },
+    })
+  }
+
   if (!job) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -50,7 +65,11 @@ export default async function JobDetailPage({ params }: { params: { id: string }
                 </CardDescription>
               </div>
               {session?.user && (session.user.role === "STUDENT" || session.user.role === "EXPERT") && (
-                <ApplyButton jobId={job.id} userId={session.user.id} />
+                <ApplyButton 
+                  jobId={job.id} 
+                  userId={session.user.id}
+                  existingApplication={existingApplication}
+                />
               )}
             </div>
           </CardHeader>

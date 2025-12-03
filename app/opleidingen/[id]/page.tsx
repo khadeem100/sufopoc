@@ -21,6 +21,21 @@ export default async function OpleidingDetailPage({ params }: { params: { id: st
     },
   })
 
+  // Check if user has already applied
+  let existingApplication = null
+  if (session?.user) {
+    existingApplication = await prisma.application.findFirst({
+      where: {
+        userId: session.user.id,
+        opleidingId: params.id,
+      },
+      select: {
+        id: true,
+        status: true,
+      },
+    })
+  }
+
   if (!opleiding) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -50,7 +65,11 @@ export default async function OpleidingDetailPage({ params }: { params: { id: st
                 </CardDescription>
               </div>
               {session?.user && (session.user.role === "STUDENT" || session.user.role === "EXPERT") && (
-                <ApplyOpleidingButton opleidingId={opleiding.id} userId={session.user.id} />
+                <ApplyOpleidingButton 
+                  opleidingId={opleiding.id} 
+                  userId={session.user.id}
+                  existingApplication={existingApplication}
+                />
               )}
             </div>
           </CardHeader>

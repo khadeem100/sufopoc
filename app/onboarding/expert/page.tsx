@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
+import { useToast } from "@/hooks/use-toast"
 
 const steps = [
   { id: 1, title: "Expertise" },
@@ -18,6 +19,7 @@ const steps = [
 
 export default function ExpertOnboardingPage() {
   const router = useRouter()
+  const { toast } = useToast()
   const [currentStep, setCurrentStep] = useState(1)
   const [formData, setFormData] = useState({
     expertise: [] as string[],
@@ -77,13 +79,29 @@ export default function ExpertOnboardingPage() {
         }),
       })
 
-      if (!response.ok) throw new Error("Failed to save")
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || "Failed to save")
+      }
 
-      router.push("/expert")
-      router.refresh()
+      // Show success message
+      toast({
+        title: "Onboarding voltooid!",
+        description: "Je profiel is succesvol aangemaakt. Je wordt doorgestuurd naar je dashboard.",
+      })
+
+      // Wait a moment to show the success message, then redirect
+      setTimeout(() => {
+        router.push("/expert")
+        router.refresh()
+      }, 1500)
     } catch (error) {
       console.error("Onboarding error:", error)
-    } finally {
+      toast({
+        title: "Fout",
+        description: error instanceof Error ? error.message : "Er is iets misgegaan. Probeer het opnieuw.",
+        variant: "destructive",
+      })
       setLoading(false)
     }
   }

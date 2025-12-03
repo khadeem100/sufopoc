@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
-import { Users, Briefcase, GraduationCap, CheckCircle, XCircle, Plus } from "lucide-react"
+import { Users, Briefcase, GraduationCap, CheckCircle, XCircle, Plus, FileText } from "lucide-react"
 import { LogoutButton } from "@/components/logout-button"
 
 export default async function AdminDashboard() {
@@ -34,6 +34,9 @@ export default async function AdminDashboard() {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-8">
               <h1 className="text-xl font-semibold">Admin Dashboard</h1>
+              <Link href="/admin/applications">
+                <Button variant="ghost">Applications</Button>
+              </Link>
               <Link href="/admin/users">
                 <Button variant="ghost">Users</Button>
               </Link>
@@ -126,7 +129,21 @@ export default async function AdminDashboard() {
         )}
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Applications</CardTitle>
+              <CardDescription>View all applications</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Link href="/admin/applications">
+                <Button className="w-full">
+                  <FileText className="mr-2 h-4 w-4" />
+                  View Applications
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
           <Card>
             <CardHeader>
               <CardTitle>Manage Users</CardTitle>

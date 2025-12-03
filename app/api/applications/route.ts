@@ -8,7 +8,7 @@ const applicationSchema = z.object({
   jobId: z.string().optional(),
   opleidingId: z.string().optional(),
   userId: z.string(),
-  cvUrl: z.string().url(),
+  cvUrl: z.string().url().optional(),
   coverLetter: z.string().min(1),
 })
 
@@ -34,12 +34,37 @@ export async function POST(req: Request) {
       )
     }
 
+    // Check for duplicate application
+    const existingApplication = await prisma.application.findFirst({
+      where: {
+        userId: validatedData.userId,
+        ...(validatedData.jobId
+          ? { jobId: validatedData.jobId }
+          : { opleidingId: validatedData.opleidingId }),
+      },
+    })
+
+    if (existingApplication) {
+      return NextResponse.json(
+        { error: "You have already applied for this position" },
+        { status: 400 }
+      )
+    }
+
+    // Get user's saved CV URL if not provided
+    const user = await prisma.user.findUnique({
+      where: { id: validatedData.userId },
+      select: { cvUrl: true },
+    })
+
+    const finalCvUrl = validatedData.cvUrl || user?.cvUrl || null
+
     const application = await prisma.application.create({
       data: {
         userId: validatedData.userId,
         jobId: validatedData.jobId || null,
         opleidingId: validatedData.opleidingId || null,
-        cvUrl: validatedData.cvUrl,
+        cvUrl: finalCvUrl,
         coverLetter: validatedData.coverLetter,
         status: "SUBMITTED",
       },

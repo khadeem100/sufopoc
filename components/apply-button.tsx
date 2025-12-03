@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -14,18 +14,45 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { useRouter } from "next/navigation"
+import { useToast } from "@/hooks/use-toast"
+import { ApplicationStatus } from "@prisma/client"
 
 interface ApplyButtonProps {
   jobId: string
   userId: string
+  existingApplication?: {
+    id: string
+    status: ApplicationStatus
+  } | null
 }
 
-export function ApplyButton({ jobId, userId }: ApplyButtonProps) {
+export function ApplyButton({ jobId, userId, existingApplication }: ApplyButtonProps) {
   const [open, setOpen] = useState(false)
   const [cvUrl, setCvUrl] = useState("")
   const [coverLetter, setCoverLetter] = useState("")
   const [loading, setLoading] = useState(false)
+  const [userCvUrl, setUserCvUrl] = useState<string>("")
   const router = useRouter()
+  const { toast } = useToast()
+
+  // Fetch user's saved CV URL
+  useEffect(() => {
+    const fetchUserCv = async () => {
+      try {
+        const response = await fetch(`/api/users/${userId}/cv`)
+        if (response.ok) {
+          const data = await response.json()
+          if (data.cvUrl) {
+            setUserCvUrl(data.cvUrl)
+            setCvUrl(data.cvUrl)
+          }
+        }
+      } catch (error) {
+        // Silently fail - CV URL is optional
+      }
+    }
+    fetchUserCv()
+  }, [userId])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -44,16 +71,35 @@ export function ApplyButton({ jobId, userId }: ApplyButtonProps) {
       })
 
       if (!response.ok) {
-        throw new Error("Failed to submit application")
+        const errorData = await response.json()
+        throw new Error(errorData.error || "Failed to submit application")
       }
 
       setOpen(false)
+      setCoverLetter("")
+      toast({
+        title: "Application submitted!",
+        description: "Your application has been successfully submitted.",
+      })
       router.refresh()
     } catch (error) {
       console.error("Application error:", error)
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to submit application",
+        variant: "destructive",
+      })
     } finally {
       setLoading(false)
     }
+  }
+
+  if (existingApplication) {
+    return (
+      <Button disabled variant="outline">
+        Applied - {existingApplication.status.replace(/_/g, " ")}
+      </Button>
+    )
   }
 
   return (
@@ -70,15 +116,19 @@ export function ApplyButton({ jobId, userId }: ApplyButtonProps) {
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="cvUrl">CV URL</Label>
+            <Label htmlFor="cvUrl">CV URL {userCvUrl && "(from profile)"}</Label>
             <Input
               id="cvUrl"
               type="url"
               placeholder="https://..."
               value={cvUrl}
               onChange={(e) => setCvUrl(e.target.value)}
-              required
             />
+            {userCvUrl && (
+              <p className="text-xs text-gray-500">
+                Using your saved CV URL. You can override it above.
+              </p>
+            )}
           </div>
           <div className="space-y-2">
             <Label htmlFor="coverLetter">Cover Letter</Label>
