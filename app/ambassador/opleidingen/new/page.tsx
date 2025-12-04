@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
+import { useSession } from "next-auth/react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -32,10 +33,14 @@ const REQUIRED_DOCUMENTS_OPTIONS = [
 
 export default function NewOpleidingPage() {
   const router = useRouter()
+  const { data: session } = useSession()
   const { toast } = useToast()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const [currentStep, setCurrentStep] = useState(1)
+  
+  // Determine dashboard URL based on user role
+  const dashboardUrl = session?.user?.role === "ADMIN" ? "/admin" : "/ambassador"
   const [formData, setFormData] = useState({
     // Basis informatie
     title: "",
@@ -209,7 +214,7 @@ export default function NewOpleidingPage() {
         description: "Opleiding created successfully",
       })
 
-      router.push("/ambassador")
+      router.push(dashboardUrl)
       router.refresh()
     } catch (error: any) {
       const errorMessage = error.message || "Failed to create opleiding. Please try again."
@@ -243,7 +248,7 @@ export default function NewOpleidingPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <Link href="/ambassador">
+        <Link href={dashboardUrl}>
           <Button variant="ghost" className="mb-4">← Back to Dashboard</Button>
         </Link>
 

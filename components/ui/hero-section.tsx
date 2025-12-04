@@ -56,9 +56,9 @@ export default function HeroSection() {
             <div className="relative group flex items-center gap-1 cursor-pointer">
               <span>Opportunities</span>
               <ChevronRight className="h-4 w-4 rotate-90" />
-              <div className="absolute bg-white font-normal flex flex-col gap-2 w-max rounded-lg p-4 top-36 left-0 opacity-0 -translate-y-full group-hover:top-44 group-hover:opacity-100 transition-all duration-300 shadow-sm z-50">
-                <Link href="/jobs" className="hover:translate-x-1 hover:text-slate-500 transition-all">Jobs</Link>
-                <Link href="/opleidingen" className="hover:translate-x-1 hover:text-slate-500 transition-all">Opleidingen</Link>
+              <div className="absolute bg-white font-normal flex flex-col gap-2 w-max rounded-lg p-4 top-full left-0 mt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 shadow-lg border border-gray-200 z-50">
+                <Link href="/jobs" className="hover:translate-x-1 hover:text-gray-700 transition-all whitespace-nowrap">Jobs</Link>
+                <Link href="/opleidingen" className="hover:translate-x-1 hover:text-gray-700 transition-all whitespace-nowrap">Opleidingen</Link>
               </div>
             </div>
             <Link href="/jobs" className="hover:text-gray-600" onClick={() => setMenuOpen(false)}>Browse Jobs</Link>

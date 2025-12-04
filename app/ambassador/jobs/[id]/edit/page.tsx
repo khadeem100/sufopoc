@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter, useParams } from "next/navigation"
+import { useSession } from "next-auth/react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -42,12 +43,16 @@ const EXTRA_BENEFITS_OPTIONS = [
 export default function EditJobPage() {
   const router = useRouter()
   const params = useParams()
+  const { data: session } = useSession()
   const { toast } = useToast()
   const [loading, setLoading] = useState(false)
   const [fetching, setFetching] = useState(true)
   const [error, setError] = useState("")
   const [currentStep, setCurrentStep] = useState(1)
   const [mounted, setMounted] = useState(false)
+  
+  // Determine dashboard URL based on user role
+  const dashboardUrl = session?.user?.role === "ADMIN" ? "/admin" : "/ambassador"
   const [formData, setFormData] = useState({
     // Basic job info
     title: "",
@@ -247,7 +252,7 @@ export default function EditJobPage() {
         variant: "success",
       })
 
-      router.push(`/ambassador/jobs/${params.id}`)
+      router.push(`${dashboardUrl}/jobs/${params.id}`)
       router.refresh()
     } catch (error: any) {
       const errorMessage = error.message || "Failed to update job. Please try again."
@@ -275,7 +280,7 @@ export default function EditJobPage() {
   return (
     <div className="min-h-screen bg-white">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <Link href={`/ambassador/jobs/${params.id}`}>
+        <Link href={`${dashboardUrl}/jobs/${params.id}`}>
           <Button variant="ghost" className="mb-4">
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter, useParams } from "next/navigation"
+import { useSession } from "next-auth/react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
@@ -63,7 +64,7 @@ interface Job {
   type?: string
   isExpired: boolean
   createdAt: string | Date
-  applications: Array<{
+  applications?: Array<{
     id: string
     status: ApplicationStatus
     cvUrl: string | null
@@ -79,11 +80,15 @@ interface Job {
 export default function ManageJobPage() {
   const router = useRouter()
   const params = useParams()
+  const { data: session } = useSession()
   const { toast } = useToast()
   const [job, setJob] = useState<Job | null>(null)
   const [loading, setLoading] = useState(true)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  
+  // Determine dashboard URL based on user role
+  const dashboardUrl = session?.user?.role === "ADMIN" ? "/admin" : "/ambassador"
 
   useEffect(() => {
     const fetchJob = async () => {
@@ -115,7 +120,7 @@ export default function ManageJobPage() {
         setJob({ 
           ...jobData, 
           createdAt: jobData.createdAt instanceof Date ? jobData.createdAt : new Date(jobData.createdAt || Date.now()),
-          applications: applicationsWithDates 
+          applications: applicationsWithDates || [] 
         })
       } catch (error) {
         console.error("Error fetching job:", error)
@@ -146,7 +151,7 @@ export default function ManageJobPage() {
         variant: "success",
       })
 
-      router.push("/ambassador")
+      router.push(dashboardUrl)
       router.refresh()
     } catch (error: any) {
       toast({
@@ -218,7 +223,7 @@ export default function ManageJobPage() {
     <div className="min-h-screen bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex items-center justify-between mb-6">
-          <Link href="/ambassador">
+          <Link href={dashboardUrl}>
             <Button variant="ghost">← Back to Dashboard</Button>
           </Link>
           <div className="flex gap-2">
@@ -227,7 +232,7 @@ export default function ManageJobPage() {
                 Expired
               </span>
             )}
-            <Link href={`/ambassador/jobs/${params.id}/edit`}>
+            <Link href={`${dashboardUrl}/jobs/${params.id}/edit`}>
               <Button variant="outline" size="sm">
                 <Edit className="mr-2 h-4 w-4" />
                 Edit
@@ -446,10 +451,10 @@ export default function ManageJobPage() {
 
         <Card className="mt-6 border-0 shadow-lg">
           <CardHeader>
-            <CardTitle>Applications ({job.applications.length})</CardTitle>
+            <CardTitle>Applications ({job.applications?.length || 0})</CardTitle>
           </CardHeader>
           <CardContent>
-            <ApplicationList applications={job.applications} />
+            <ApplicationList applications={job.applications || []} />
           </CardContent>
         </Card>
       </div>

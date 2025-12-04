@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter, useParams } from "next/navigation"
+import { useSession } from "next-auth/react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -21,10 +22,14 @@ import { useToast } from "@/hooks/use-toast"
 export default function EditOpleidingPage() {
   const router = useRouter()
   const params = useParams()
+  const { data: session } = useSession()
   const { toast } = useToast()
   const [loading, setLoading] = useState(false)
   const [fetching, setFetching] = useState(true)
   const [error, setError] = useState("")
+  
+  // Determine dashboard URL based on user role
+  const dashboardUrl = session?.user?.role === "ADMIN" ? "/admin" : "/ambassador"
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -86,7 +91,7 @@ export default function EditOpleidingPage() {
         description: "Opleiding updated successfully",
       })
 
-      router.push(`/ambassador/opleidingen/${params.id}`)
+      router.push(`${dashboardUrl}/opleidingen/${params.id}`)
       router.refresh()
     } catch (error: any) {
       const errorMessage = error.message || "Failed to update opleiding. Please try again."
@@ -112,7 +117,7 @@ export default function EditOpleidingPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <Link href={`/ambassador/opleidingen/${params.id}`}>
+        <Link href={`${dashboardUrl}/opleidingen/${params.id}`}>
           <Button variant="ghost" className="mb-4">← Back</Button>
         </Link>
 
@@ -202,7 +207,7 @@ export default function EditOpleidingPage() {
               </div>
 
               <div className="flex justify-end gap-4">
-                <Link href={`/ambassador/opleidingen/${params.id}`}>
+                <Link href={`${dashboardUrl}/opleidingen/${params.id}`}>
                   <Button type="button" variant="outline">Cancel</Button>
                 </Link>
                 <Button type="submit" disabled={loading} className="bg-black hover:bg-gray-800">

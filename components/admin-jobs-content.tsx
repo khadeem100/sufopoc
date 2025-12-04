@@ -48,7 +48,7 @@ export function AdminJobsContent({ session, links, jobs }: AdminJobsContentProps
             <h2 className="text-3xl font-bold text-black">Jobs Management</h2>
             <p className="text-gray-600 mt-2">Manage all job postings</p>
           </div>
-          <Link href="/ambassador/jobs/new">
+          <Link href="/admin/jobs/new">
             <Button className="bg-black hover:bg-gray-800">
               <Plus className="mr-2 h-4 w-4" />
               Create New Job
@@ -93,7 +93,7 @@ export function AdminJobsContent({ session, links, jobs }: AdminJobsContentProps
                           View
                         </Button>
                       </Link>
-                      <Link href={`/ambassador/jobs/${job.id}`}>
+                      <Link href={`/admin/jobs/${job.id}`}>
                         <Button variant="outline" size="sm">
                           Manage
                         </Button>

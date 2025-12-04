@@ -207,7 +207,7 @@ export function AdminDashboardContent({ session, links, stats }: AdminDashboardC
                   View Jobs
                 </Button>
               </Link>
-              <Link href="/ambassador/jobs/new">
+              <Link href="/admin/jobs/new">
                 <Button className="w-full bg-black hover:bg-gray-800">
                   <Plus className="mr-2 h-4 w-4" />
                   Create Job
@@ -232,7 +232,7 @@ export function AdminDashboardContent({ session, links, stats }: AdminDashboardC
                   View All
                 </Button>
               </Link>
-              <Link href="/ambassador/opleidingen/new">
+              <Link href="/admin/opleidingen/new">
                 <Button className="w-full bg-black hover:bg-gray-800">
                   <Plus className="mr-2 h-4 w-4" />
                   Create Opleiding

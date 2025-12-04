@@ -43,7 +43,27 @@ export default async function OpleidingenPage({ searchParams }: OpleidingenPageP
 
   const opleidingen = await prisma.opleiding.findMany({
     where,
-    include: {
+    select: {
+      id: true,
+      title: true,
+      shortDescription: true,
+      longDescription: true,
+      description: true,
+      category: true,
+      programType: true,
+      partnerCountry: true,
+      partnerSchool: true,
+      schoolCity: true,
+      schoolCountry: true,
+      location: true,
+      studyDurationYears: true,
+      duration: true,
+      language: true,
+      tuitionFeeYear: true,
+      tags: true,
+      thumbnailUrl: true,
+      bannerUrl: true,
+      createdAt: true,
       createdBy: {
         select: {
           name: true,

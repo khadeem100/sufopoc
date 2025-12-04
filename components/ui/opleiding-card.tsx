@@ -68,17 +68,30 @@ export function OpleidingCard({
     : location || "Location not specified"
   const displaySchool = partnerSchool || "Study Program"
 
+  // Validate URL format
+  const isValidUrl = (url: string) => {
+    try {
+      const parsed = new URL(url)
+      return parsed.protocol === 'http:' || parsed.protocol === 'https:'
+    } catch {
+      return false
+    }
+  }
+
+  const imageSrc = cover && isValidUrl(cover) ? cover : "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=800&h=400&fit=crop"
+
   return (
     <Link href={`/opleidingen/${id}`}>
       <Card className="flex w-full max-w-sm flex-col gap-3 overflow-hidden rounded-3xl border p-3 shadow-lg hover:shadow-xl transition-shadow cursor-pointer">
-        {cover && (
+        {imageSrc && (
           <CardHeader className="p-0">
             <div className="relative h-56 w-full">
               <Image
-                src={cover}
+                src={imageSrc}
                 alt={title}
                 fill
                 className="rounded-2xl object-cover"
+                unoptimized={!imageSrc.includes('unsplash.com') && !imageSrc.includes('localhost')}
               />
             </div>
           </CardHeader>

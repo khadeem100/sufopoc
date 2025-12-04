@@ -2,6 +2,7 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import HeroSection from "@/components/ui/hero-section"
+import { DevelopmentNotice } from "@/components/development-notice"
 
 export default async function Home() {
   const session = await getServerSession(authOptions)
@@ -15,5 +16,10 @@ export default async function Home() {
     if (role === "STUDENT") redirect("/student")
   }
 
-  return <HeroSection />
+  return (
+    <>
+      <HeroSection />
+      <DevelopmentNotice />
+    </>
+  )
 }

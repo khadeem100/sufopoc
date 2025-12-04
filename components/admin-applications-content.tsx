@@ -227,7 +227,7 @@ export function AdminApplicationsContent({ session, links, applications, jobs, o
                               <div className="flex items-center gap-1">
                                 <Briefcase className="h-4 w-4" />
                                 <Link
-                                  href={`/ambassador/jobs/${app.job.id}`}
+                                  href={`/admin/jobs/${app.job.id}`}
                                   className="text-gray-600 hover:underline"
                                 >
                                   {app.job.title}
@@ -238,7 +238,7 @@ export function AdminApplicationsContent({ session, links, applications, jobs, o
                               <div className="flex items-center gap-1">
                                 <GraduationCap className="h-4 w-4" />
                                 <Link
-                                  href={`/ambassador/opleidingen/${app.opleiding.id}`}
+                                  href={`/admin/opleidingen/${app.opleiding.id}`}
                                   className="text-gray-600 hover:underline"
                                 >
                                   {app.opleiding.title}
@@ -268,13 +268,13 @@ export function AdminApplicationsContent({ session, links, applications, jobs, o
                         </div>
                         <div className="ml-4">
                           {app.job ? (
-                            <Link href={`/ambassador/jobs/${app.job.id}`}>
+                            <Link href={`/admin/jobs/${app.job.id}`}>
                               <Button variant="outline" size="sm">
                                 Manage
                               </Button>
                             </Link>
                           ) : app.opleiding ? (
-                            <Link href={`/ambassador/opleidingen/${app.opleiding.id}`}>
+                            <Link href={`/admin/opleidingen/${app.opleiding.id}`}>
                               <Button variant="outline" size="sm">
                                 Manage
                               </Button>
