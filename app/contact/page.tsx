@@ -1,5 +1,6 @@
 "use client"
 
+import { PageHeader } from "@/components/ui/page-header"
 import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -20,6 +21,8 @@ const contactSchema = z.object({
 })
 
 type ContactFormData = z.infer<typeof contactSchema>
+
+import { PageHeader } from "@/components/ui/page-header"
 
 export default function ContactPage() {
   const { toast } = useToast()
@@ -68,9 +71,11 @@ export default function ContactPage() {
   }
 
   return (
-    <div className="container mx-auto py-10 px-4">
-      <div className="max-w-2xl mx-auto">
-        <Card>
+    <>
+      <PageHeader />
+      <div className="container mx-auto py-10 px-4">
+        <div className="max-w-2xl mx-auto">
+          <Card>
           <CardHeader>
             <CardTitle>Contact Us</CardTitle>
             <CardDescription>
@@ -132,5 +137,6 @@ export default function ContactPage() {
         </Card>
       </div>
     </div>
+    </>
   )
 }
