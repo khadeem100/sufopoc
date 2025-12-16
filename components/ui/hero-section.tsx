@@ -77,6 +77,7 @@ export default function HeroSection() {
                 <Link href="/opleidingen" className="hover:translate-x-1 hover:text-gray-700 transition-all whitespace-nowrap">Opleidingen</Link>
               </div>
             </div>
+            <Link href="/roadmap" className="hover:text-gray-600" onClick={() => setMenuOpen(false)}>Roadmap</Link>
             <Link href="/jobs" className="hover:text-gray-600" onClick={() => setMenuOpen(false)}>Browse Jobs</Link>
             <Link href="/opleidingen" className="hover:text-gray-600" onClick={() => setMenuOpen(false)}>Study Abroad</Link>
             
