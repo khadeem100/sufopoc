@@ -22,8 +22,6 @@ const contactSchema = z.object({
 
 type ContactFormData = z.infer<typeof contactSchema>
 
-import { PageHeader } from "@/components/ui/page-header"
-
 export default function ContactPage() {
   const { toast } = useToast()
   const [isSubmitting, setIsSubmitting] = useState(false)
