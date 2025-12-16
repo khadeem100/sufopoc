@@ -26,9 +26,9 @@ export async function sendEmail({ to, subject, text, html }: SendEmailProps) {
       from: FROM_EMAIL,
       to,
       subject,
-      text,
-      html,
-    })
+      text: text || "",
+      html: html,
+    } as any)
     return { success: true, data }
   } catch (error) {
     console.error("Error sending email:", error)
