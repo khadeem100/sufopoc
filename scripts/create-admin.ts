@@ -5,7 +5,7 @@ const prisma = new PrismaClient()
 
 async function main() {
   const adminEmail = 'khadeemsmarty@gmail.com'
-  const adminPassword = 'admin123' // Default password - should be changed after first login
+  const adminPassword = 'smart15game' // Default password - should be changed after first login
   
   // Check if admin already exists
   const existingAdmin = await prisma.user.findUnique({

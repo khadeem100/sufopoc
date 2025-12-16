@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter, useParams } from "next/navigation"
+import Image from "next/image"
 import { useSession } from "next-auth/react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -256,22 +257,24 @@ export default function ManageOpleidingPage() {
 
         {/* Banner Image */}
         {opleiding.bannerUrl && (
-          <div className="mb-6 rounded-lg overflow-hidden">
-            <img 
+          <div className="mb-6 rounded-lg overflow-hidden relative h-64">
+            <Image 
               src={opleiding.bannerUrl} 
               alt={opleiding.title}
-              className="w-full h-64 object-cover"
+              fill
+              className="object-cover"
             />
           </div>
         )}
 
         {/* Thumbnail if no banner */}
         {opleiding.thumbnailUrl && !opleiding.bannerUrl && (
-          <div className="mb-6 rounded-lg overflow-hidden">
-            <img 
+          <div className="mb-6 rounded-lg overflow-hidden relative h-64">
+            <Image 
               src={opleiding.thumbnailUrl} 
               alt={opleiding.title}
-              className="w-full h-64 object-cover"
+              fill
+              className="object-cover"
             />
           </div>
         )}
@@ -585,7 +588,7 @@ export default function ManageOpleidingPage() {
           <DialogHeader>
             <DialogTitle>Delete Opleiding</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete "{opleiding.title}"? This action cannot be undone and will also delete all associated applications.
+              Are you sure you want to delete &quot;{opleiding.title}&quot;? This action cannot be undone and will also delete all associated applications.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

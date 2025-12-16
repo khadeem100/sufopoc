@@ -91,8 +91,6 @@ export async function POST(req: Request) {
     
     const validatedData = opleidingSchema.parse(preprocessedBody)
     
-    console.log("Creating opleiding with validated data keys:", Object.keys(validatedData))
-
     const opleiding = await prisma.opleiding.create({
       data: {
         title: validatedData.title,
@@ -167,16 +165,33 @@ export async function POST(req: Request) {
       }
       
       // Check for enum errors
-      if (prismaError.code === 'P2003' || prismaError.message?.includes('enum') || prismaError.message?.includes('ProgramType')) {
-        return NextResponse.json(
-          { 
-            error: "Database schema mismatch", 
-            message: "The ProgramType enum needs to be created in the database.",
-            details: prismaError.message,
-            solution: "Run: npx prisma db push to sync the schema"
-          },
-          { status: 500 }
-        )
+      if (prismaError.code === 'P2003') {
+        // Check if it's a foreign key constraint failure (e.g. user ID not found)
+        if (prismaError.message?.includes('Foreign key constraint violated') || 
+            prismaError.meta?.field_name === 'createdById' ||
+            prismaError.message?.includes('createdById')) {
+          return NextResponse.json(
+            {
+              error: "User session invalid or user not found.",
+              details: "The user account associated with this session no longer exists. Please sign out and sign in again.",
+              code: "USER_NOT_FOUND"
+            },
+            { status: 401 }
+          )
+        }
+
+        // Otherwise assume enum error if mentioned
+        if (prismaError.message?.includes('enum') || prismaError.message?.includes('ProgramType')) {
+          return NextResponse.json(
+            { 
+              error: "Database schema mismatch", 
+              message: "The ProgramType enum needs to be created in the database.",
+              details: prismaError.message,
+              solution: "Run: npx prisma db push to sync the schema"
+            },
+            { status: 500 }
+          )
+        }
       }
     }
     

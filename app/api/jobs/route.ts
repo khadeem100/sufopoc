@@ -44,9 +44,9 @@ const jobSchema = z.object({
   additionalTests: z.array(z.string()).default([]),
 
   // Process timeline
-  applicationDeadline: z.string().nullable().optional(),
+  applicationDeadline: z.date().nullable().optional(),
   hiringTimeline: z.string().nullable().optional(),
-  startDate: z.string().nullable().optional(),
+  startDate: z.date().nullable().optional(),
   positionsAvailable: z.number().int().positive().default(1),
 
   // Media
@@ -123,22 +123,45 @@ export async function POST(req: Request) {
 
     // Handle Prisma errors
     if (error && typeof error === 'object' && 'code' in error) {
-      const prismaError = error as { code: string; meta?: any }
-      if (prismaError.code === 'P2022' || prismaError.code === 'P2001') {
+      const prismaError = error as any
+      console.error("Prisma error code:", prismaError.code)
+      console.error("Prisma error meta:", prismaError.meta)
+
+      if (prismaError.code === 'P2022' || 
+          prismaError.code === 'P2001' ||
+          prismaError.message?.includes('column') || 
+          prismaError.message?.includes('does not exist') ||
+          prismaError.message?.includes('Unknown column') ||
+          prismaError.meta?.column) {
         return NextResponse.json(
           {
             error: "Database schema mismatch. Please run database migration.",
-            details: `Column or table not found: ${prismaError.meta?.column || prismaError.meta?.target}`,
+            details: prismaError.message || `Column: ${prismaError.meta?.column}`,
             migrationHint: "Run: npx prisma db push or npx prisma migrate dev"
           },
           { status: 500 }
+        )
+      }
+
+      if (prismaError.code === 'P2003') {
+        return NextResponse.json(
+          {
+            error: "User session invalid or user not found.",
+            details: "The user account associated with this session no longer exists. Please sign out and sign in again.",
+            code: "USER_NOT_FOUND"
+          },
+          { status: 401 }
         )
       }
     }
 
     console.error("Job creation error:", error)
     return NextResponse.json(
-      { error: "Internal server error", stack: process.env.NODE_ENV === 'development' ? String(error) : undefined },
+      { 
+        error: "Internal server error", 
+        message: error instanceof Error ? error.message : "Unknown error",
+        stack: process.env.NODE_ENV === 'development' && error instanceof Error ? error.stack : undefined 
+      },
       { status: 500 }
     )
   }

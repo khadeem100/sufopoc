@@ -87,7 +87,7 @@ export function BugReportButton() {
           <DialogHeader>
             <DialogTitle>Report a Bug</DialogTitle>
             <DialogDescription>
-              Found an issue? Let us know and we'll fix it as soon as possible.
+              Found an issue? Let us know and we&apos;ll fix it as soon as possible.
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit}>

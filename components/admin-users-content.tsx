@@ -1,6 +1,11 @@
 "use client"
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { UserCard } from "@/components/ui/user-card"
+import { Input } from "@/components/ui/input"
+import { Search } from "lucide-react"
+import { useState } from "react"
+import { useToast } from "@/hooks/use-toast"
+import { useRouter } from "next/navigation"
 import { DashboardLayout } from "@/components/dashboard-layout"
 import { Session } from "next-auth"
 
@@ -11,6 +16,7 @@ interface User {
   role: string
   isVerified: boolean | null
   createdAt: Date
+  image?: string | null
 }
 
 interface AdminUsersContentProps {
@@ -24,6 +30,43 @@ interface AdminUsersContentProps {
 }
 
 export function AdminUsersContent({ session, links, users }: AdminUsersContentProps) {
+  const [searchQuery, setSearchQuery] = useState("")
+  const { toast } = useToast()
+  const router = useRouter()
+
+  const handleVerify = async (userId: string) => {
+    try {
+      const res = await fetch("/api/admin/verify-ambassador", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId }),
+      })
+
+      if (!res.ok) throw new Error("Failed to verify user")
+
+      toast({
+        title: "Success",
+        description: "Ambassador verified successfully",
+      })
+      router.refresh()
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to verify ambassador",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const filteredUsers = users.filter((user) => {
+    const query = searchQuery.toLowerCase()
+    return (
+      (user.name?.toLowerCase() || "").includes(query) ||
+      user.email.toLowerCase().includes(query) ||
+      user.role.toLowerCase().includes(query)
+    )
+  })
+
   return (
     <DashboardLayout
       links={links}
@@ -33,42 +76,40 @@ export function AdminUsersContent({ session, links, users }: AdminUsersContentPr
         image: session.user.image || null,
       }}
     >
-      <div className="w-full">
-        <div className="mb-8">
-          <h2 className="text-3xl font-bold text-black">Users Management</h2>
-          <p className="text-gray-600 mt-2">Manage all platform users</p>
+      <div className="w-full space-y-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <h2 className="text-3xl font-bold text-black">Users Management</h2>
+            <p className="text-gray-600 mt-2">Manage all platform users</p>
+          </div>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>All Users ({users.length})</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {users.map((user) => (
-                <div key={user.id} className="border-b pb-4 last:border-0">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h4 className="font-semibold">{user.name || "No name"}</h4>
-                      <p className="text-sm text-gray-600">{user.email}</p>
-                      <p className="text-sm text-gray-600">
-                        Role: <span className="capitalize">{user.role.toLowerCase()}</span>
-                      </p>
-                      {user.role === "AMBASSADOR" && (
-                        <p className="text-sm text-gray-600">
-                          Verified: {user.isVerified ? "Yes" : "No"}
-                        </p>
-                      )}
-                      <p className="text-xs text-gray-500 mt-1">
-                        Joined: {new Date(user.createdAt).toLocaleDateString()}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              ))}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Input
+            placeholder="Search users..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9 max-w-md"
+          />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredUsers.map((user) => (
+            <div key={user.id} className="h-full">
+              <UserCard
+                id={user.id}
+                name={user.name}
+                email={user.email}
+                role={user.role}
+                isVerified={user.isVerified}
+                createdAt={user.createdAt}
+                imageUrl={user.image}
+                onVerify={user.role === "AMBASSADOR" && !user.isVerified ? () => handleVerify(user.id) : undefined}
+              />
             </div>
-          </CardContent>
-        </Card>
+          ))}
+        </div>
       </div>
     </DashboardLayout>
   )

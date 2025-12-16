@@ -2,11 +2,27 @@
 
 import React from 'react';
 import Link from 'next/link';
+import { useSession, signOut } from 'next-auth/react';
 import { Briefcase, GraduationCap, Menu, X, ChevronRight, Play } from 'lucide-react';
 
 export default function HeroSection() {
+  const { data: session } = useSession();
   const [menuOpen, setMenuOpen] = React.useState(false);
   const menuRef = React.useRef<HTMLDivElement | null>(null);
+
+  // Determine dashboard URL based on user role
+  const getDashboardUrl = () => {
+    if (!session?.user) return '/';
+    switch (session.user.role) {
+      case 'ADMIN': return '/admin';
+      case 'AMBASSADOR': return '/ambassador';
+      case 'EXPERT': return '/expert';
+      case 'STUDENT': return '/student';
+      default: return '/';
+    }
+  };
+
+  const dashboardUrl = getDashboardUrl();
 
   // Close on ESC & click outside (mobile overlay)
   React.useEffect(() => {
@@ -63,7 +79,26 @@ export default function HeroSection() {
             </div>
             <Link href="/jobs" className="hover:text-gray-600" onClick={() => setMenuOpen(false)}>Browse Jobs</Link>
             <Link href="/opleidingen" className="hover:text-gray-600" onClick={() => setMenuOpen(false)}>Study Abroad</Link>
-            <Link href="/auth/signin" className="hover:text-gray-600" onClick={() => setMenuOpen(false)}>Sign In</Link>
+            
+            {session ? (
+              <>
+                <Link href={dashboardUrl} className="hover:text-gray-600" onClick={() => setMenuOpen(false)}>
+                  Dashboard
+                </Link>
+                <button 
+                  onClick={() => {
+                    signOut({ callbackUrl: '/' });
+                    setMenuOpen(false);
+                  }} 
+                  className="hover:text-gray-600 text-left"
+                >
+                  Sign Out
+                </button>
+              </>
+            ) : (
+              <Link href="/auth/signin" className="hover:text-gray-600" onClick={() => setMenuOpen(false)}>Sign In</Link>
+            )}
+
             <button
               onClick={() => setMenuOpen(false)}
               className="md:hidden bg-gray-800 hover:bg-black text-white p-2 rounded-md aspect-square font-medium transition"
@@ -73,9 +108,15 @@ export default function HeroSection() {
             </button>
           </div>
 
-          <Link href="/auth/signup" className="hidden md:block bg-gray-800 hover:bg-black text-white px-6 py-3 rounded-full font-medium transition">
-            Get Started
-          </Link>
+          {session ? (
+            <Link href={dashboardUrl} className="hidden md:block bg-gray-800 hover:bg-black text-white px-6 py-3 rounded-full font-medium transition">
+              Dashboard
+            </Link>
+          ) : (
+            <Link href="/auth/signup" className="hidden md:block bg-gray-800 hover:bg-black text-white px-6 py-3 rounded-full font-medium transition">
+              Get Started
+            </Link>
+          )}
 
           <button
             id="open-menu"
@@ -100,13 +141,19 @@ export default function HeroSection() {
         </h5>
 
         <p className="text-sm md:text-base mx-auto max-w-2xl text-center mt-6 max-md:px-2 text-gray-600">
-          Connect with job opportunities and study abroad programs that match your skills and ambitions. Whether you're a student looking to study internationally or an expert seeking new opportunities, we've got you covered.
+          Connect with job opportunities and study abroad programs that match your skills and ambitions. Whether you&apos;re a student looking to study internationally or an expert seeking new opportunities, we&apos;ve got you covered.
         </p>
 
         <div className="mx-auto w-full flex items-center justify-center gap-3 mt-8">
-          <Link href="/auth/signup" className="bg-slate-800 hover:bg-black text-white px-6 py-3 rounded-full font-medium transition">
-            Get Started
-          </Link>
+          {session ? (
+            <Link href={dashboardUrl} className="bg-slate-800 hover:bg-black text-white px-6 py-3 rounded-full font-medium transition">
+              Go to Dashboard
+            </Link>
+          ) : (
+            <Link href="/auth/signup" className="bg-slate-800 hover:bg-black text-white px-6 py-3 rounded-full font-medium transition">
+              Get Started
+            </Link>
+          )}
           <Link href="/jobs" className="flex items-center gap-2 border border-slate-300 hover:bg-slate-200/30 rounded-full px-6 py-3">
             <span>Browse Jobs</span>
             <ChevronRight className="h-4 w-4" />

@@ -100,7 +100,7 @@ export default function AmbassadorOnboardingPage() {
               <div className="p-4 bg-gray-50 rounded-lg">
                 <h3 className="font-semibold mb-2">Verification Required</h3>
                 <p className="text-sm text-gray-600">
-                  Your ambassador account is pending admin verification. You'll be able to create
+                  Your ambassador account is pending admin verification. You&apos;ll be able to create
                   job postings and opleidingen once your account is verified.
                 </p>
               </div>

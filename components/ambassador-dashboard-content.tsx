@@ -60,7 +60,7 @@ export function AmbassadorDashboardContent({ session, links, isVerified, jobs, o
                   <AlertCircle className="h-6 w-6 text-gray-600" />
                 </div>
                 <p className="text-gray-600 font-medium">
-                  Your account is pending verification. You'll be able to create postings once verified by an admin.
+                  Your account is pending verification. You&apos;ll be able to create postings once verified by an admin.
                 </p>
               </div>
             </CardContent>
@@ -69,76 +69,61 @@ export function AmbassadorDashboardContent({ session, links, isVerified, jobs, o
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 bg-black">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-sm font-medium text-white">Jobs Created</CardTitle>
-                <div className="p-2 bg-white/10 rounded-lg">
-                  <Briefcase className="h-5 w-5 text-white" />
-                </div>
+          <Card className="border border-gray-100 shadow-sm bg-white hover:shadow-md transition-shadow">
+            <CardContent className="pt-6 flex flex-col items-center text-center">
+              <div className="p-3 bg-blue-50 rounded-full mb-3">
+                <Briefcase className="h-6 w-6 text-blue-600" />
               </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-4xl font-bold text-white">{jobs.length}</div>
-              <p className="text-xs text-white mt-1">Active job postings</p>
+              <div className="text-3xl font-bold text-gray-900">{jobs.length}</div>
+              <p className="text-sm font-medium text-gray-500 mt-1">Active Job Postings</p>
             </CardContent>
           </Card>
 
-          <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 bg-black">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-sm font-medium text-white">Opleidingen</CardTitle>
-                <div className="p-2 bg-white/10 rounded-lg">
-                  <GraduationCap className="h-5 w-5 text-white" />
-                </div>
+          <Card className="border border-gray-100 shadow-sm bg-white hover:shadow-md transition-shadow">
+            <CardContent className="pt-6 flex flex-col items-center text-center">
+              <div className="p-3 bg-purple-50 rounded-full mb-3">
+                <GraduationCap className="h-6 w-6 text-purple-600" />
               </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-4xl font-bold text-white">{opleidingen.length}</div>
-              <p className="text-xs text-white mt-1">Study abroad programs</p>
+              <div className="text-3xl font-bold text-gray-900">{opleidingen.length}</div>
+              <p className="text-sm font-medium text-gray-500 mt-1">Study Programs</p>
             </CardContent>
           </Card>
 
-          <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 bg-black">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-sm font-medium text-white">Applications</CardTitle>
-                <div className="p-2 bg-white/10 rounded-lg">
-                  <FileText className="h-5 w-5 text-white" />
-                </div>
+          <Card className="border border-gray-100 shadow-sm bg-white hover:shadow-md transition-shadow">
+            <CardContent className="pt-6 flex flex-col items-center text-center">
+              <div className="p-3 bg-green-50 rounded-full mb-3">
+                <FileText className="h-6 w-6 text-green-600" />
               </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-4xl font-bold text-white">{totalApplications}</div>
-              <p className="text-xs text-white mt-1">Total received</p>
+              <div className="text-3xl font-bold text-gray-900">{totalApplications}</div>
+              <p className="text-sm font-medium text-gray-500 mt-1">Total Applications</p>
             </CardContent>
           </Card>
         </div>
 
         {/* Jobs and Opleidingen Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card className="border-0 shadow-lg">
-            <CardHeader>
-              <div className="flex justify-between items-center">
-                <div>
-                  <CardTitle className="text-xl font-bold">Jobs Created</CardTitle>
-                  <CardDescription className="text-base">{jobs.length} total jobs</CardDescription>
-                </div>
-                {isVerified && (
-                  <Link href="/ambassador/jobs/new">
-                    <Button size="sm" className="bg-black hover:bg-gray-800">
-                      <Plus className="mr-2 h-4 w-4" />
-                      New Job
-                    </Button>
-                  </Link>
-                )}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <Card className="border border-gray-100 shadow-sm rounded-xl overflow-hidden">
+            <CardHeader className="flex flex-row items-center justify-between pb-4 bg-white border-b border-gray-50">
+              <div>
+                <CardTitle className="text-xl font-bold text-gray-900">Jobs Created</CardTitle>
+                <CardDescription className="text-gray-500">{jobs.length} total jobs</CardDescription>
               </div>
+              {isVerified && (
+                <Link href="/ambassador/jobs/new">
+                  <Button size="sm" className="bg-black hover:bg-gray-800 text-white rounded-full px-4">
+                    <Plus className="mr-2 h-4 w-4" />
+                    New Job
+                  </Button>
+                </Link>
+              )}
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-0">
               {jobs.length === 0 ? (
-                <div className="text-center py-8">
-                  <Briefcase className="mx-auto h-12 w-12 text-gray-300" />
-                  <p className="text-gray-600 mt-4">No jobs created yet</p>
+                <div className="text-center py-12 px-4">
+                  <div className="bg-gray-50 p-4 rounded-full mb-4 inline-block">
+                    <Briefcase className="h-8 w-8 text-gray-300" />
+                  </div>
+                  <p className="text-gray-600 font-medium">No jobs created yet</p>
                   {isVerified && (
                     <Link href="/ambassador/jobs/new">
                       <Button className="mt-4" variant="outline">
@@ -148,21 +133,21 @@ export function AmbassadorDashboardContent({ session, links, isVerified, jobs, o
                   )}
                 </div>
               ) : (
-                <div className="space-y-3">
+                <div className="divide-y divide-gray-50">
                   {jobs.map((job) => (
-                    <div key={job.id} className="p-4 border border-gray-200 rounded-lg hover:border-gray-300 hover:shadow-md transition-all duration-200">
+                    <div key={job.id} className="p-4 hover:bg-gray-50/50 transition-colors group">
                       <div className="flex justify-between items-start">
                         <div className="flex-1">
-                          <h4 className="font-semibold text-gray-900">{job.title}</h4>
+                          <h4 className="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">{job.title}</h4>
                           <div className="flex items-center gap-4 mt-2">
-                            <span className="text-sm text-gray-600 flex items-center gap-1">
-                              <FileText className="h-4 w-4" />
+                            <span className="text-xs text-gray-500 flex items-center gap-1 bg-gray-100 px-2 py-1 rounded-full">
+                              <FileText className="h-3 w-3" />
                               {job.applications.length} application{job.applications.length !== 1 ? 's' : ''}
                             </span>
                           </div>
                         </div>
                         <Link href={`/ambassador/jobs/${job.id}`}>
-                          <Button variant="outline" size="sm" className="ml-4">
+                          <Button variant="ghost" size="sm" className="ml-4 text-gray-400 hover:text-black">
                             Manage
                           </Button>
                         </Link>
@@ -174,28 +159,28 @@ export function AmbassadorDashboardContent({ session, links, isVerified, jobs, o
             </CardContent>
           </Card>
 
-          <Card className="border-0 shadow-lg">
-            <CardHeader>
-              <div className="flex justify-between items-center">
-                <div>
-                  <CardTitle className="text-xl font-bold">Opleidingen Created</CardTitle>
-                  <CardDescription className="text-base">{opleidingen.length} total opleidingen</CardDescription>
-                </div>
-                {isVerified && (
-                  <Link href="/ambassador/opleidingen/new">
-                    <Button size="sm" className="bg-black hover:bg-gray-800">
-                      <Plus className="mr-2 h-4 w-4" />
-                      New Opleiding
-                    </Button>
-                  </Link>
-                )}
+          <Card className="border border-gray-100 shadow-sm rounded-xl overflow-hidden">
+            <CardHeader className="flex flex-row items-center justify-between pb-4 bg-white border-b border-gray-50">
+              <div>
+                <CardTitle className="text-xl font-bold text-gray-900">Opleidingen Created</CardTitle>
+                <CardDescription className="text-gray-500">{opleidingen.length} total opleidingen</CardDescription>
               </div>
+              {isVerified && (
+                <Link href="/ambassador/opleidingen/new">
+                  <Button size="sm" className="bg-black hover:bg-gray-800 text-white rounded-full px-4">
+                    <Plus className="mr-2 h-4 w-4" />
+                    New Opleiding
+                  </Button>
+                </Link>
+              )}
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-0">
               {opleidingen.length === 0 ? (
-                <div className="text-center py-8">
-                  <GraduationCap className="mx-auto h-12 w-12 text-gray-300" />
-                  <p className="text-gray-600 mt-4">No opleidingen created yet</p>
+                <div className="text-center py-12 px-4">
+                  <div className="bg-gray-50 p-4 rounded-full mb-4 inline-block">
+                    <GraduationCap className="h-8 w-8 text-gray-300" />
+                  </div>
+                  <p className="text-gray-600 font-medium">No opleidingen created yet</p>
                   {isVerified && (
                     <Link href="/ambassador/opleidingen/new">
                       <Button className="mt-4" variant="outline">
@@ -205,21 +190,21 @@ export function AmbassadorDashboardContent({ session, links, isVerified, jobs, o
                   )}
                 </div>
               ) : (
-                <div className="space-y-3">
+                <div className="divide-y divide-gray-50">
                   {opleidingen.map((opleiding) => (
-                    <div key={opleiding.id} className="p-4 border border-gray-200 rounded-lg hover:border-gray-400 hover:shadow-md transition-all duration-200">
+                    <div key={opleiding.id} className="p-4 hover:bg-gray-50/50 transition-colors group">
                       <div className="flex justify-between items-start">
                         <div className="flex-1">
-                          <h4 className="font-semibold text-gray-900">{opleiding.title}</h4>
+                          <h4 className="font-semibold text-gray-900 group-hover:text-purple-600 transition-colors">{opleiding.title}</h4>
                           <div className="flex items-center gap-4 mt-2">
-                            <span className="text-sm text-gray-600 flex items-center gap-1">
-                              <FileText className="h-4 w-4" />
+                            <span className="text-xs text-gray-500 flex items-center gap-1 bg-gray-100 px-2 py-1 rounded-full">
+                              <FileText className="h-3 w-3" />
                               {opleiding.applications.length} application{opleiding.applications.length !== 1 ? 's' : ''}
                             </span>
                           </div>
                         </div>
                         <Link href={`/ambassador/opleidingen/${opleiding.id}`}>
-                          <Button variant="outline" size="sm" className="ml-4">
+                          <Button variant="ghost" size="sm" className="ml-4 text-gray-400 hover:text-black">
                             Manage
                           </Button>
                         </Link>

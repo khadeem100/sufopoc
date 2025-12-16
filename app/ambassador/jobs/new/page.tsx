@@ -18,7 +18,8 @@ import {
 import { Checkbox } from "@/components/ui/checkbox"
 import Link from "next/link"
 import { useToast } from "@/hooks/use-toast"
-import { Plus, X, ArrowLeft, ArrowRight } from "lucide-react"
+import { LayoutDashboard, Briefcase, GraduationCap, LogOut, Plus, X, ArrowLeft, ArrowRight } from "lucide-react"
+import { DashboardLayout } from "@/components/dashboard-layout"
 
 const JOB_TYPES = ["full-time", "part-time", "contract", "internship", "freelance"]
 const SENIORITY_LEVELS = ["junior", "mid-level", "senior", "lead"]
@@ -185,7 +186,26 @@ export default function NewJobPage() {
       const data = await response.json()
 
       if (!response.ok) {
-        throw new Error(data.error || "Failed to create job")
+        console.error("API Error Response:", data)
+        let errorMsg = data.error || "Failed to create job"
+        
+        if (data.message) {
+          errorMsg += `: ${data.message}`
+        }
+        
+        if (data.details) {
+          if (Array.isArray(data.details)) {
+            errorMsg += `\nDetails: ${data.details.map((d: any) => `${d.path?.join('.')}: ${d.message}`).join(', ')}`
+          } else {
+            errorMsg += `\nDetails: ${JSON.stringify(data.details)}`
+          }
+        }
+
+        if (data.stack) {
+          errorMsg += `\n\nStack Trace:\n${data.stack}`
+        }
+        
+        throw new Error(errorMsg)
       }
 
       toast({
@@ -240,7 +260,7 @@ export default function NewJobPage() {
           <CardContent>
             <form onSubmit={handleSubmit}>
               {error && (
-                <div className="bg-gray-50 border border-gray-200 text-gray-700 px-4 py-3 rounded mb-4">
+                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4 whitespace-pre-wrap">
                   {error}
                 </div>
               )}

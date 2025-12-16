@@ -464,7 +464,7 @@ export default function ManageJobPage() {
           <DialogHeader>
             <DialogTitle>Delete Job</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete "{job.title}"? This action cannot be undone and will also delete all associated applications.
+              Are you sure you want to delete &quot;{job.title}&quot;? This action cannot be undone and will also delete all associated applications.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

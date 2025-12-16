@@ -19,7 +19,8 @@ import { Checkbox } from "@/components/ui/checkbox"
 import Link from "next/link"
 import { ProgramType } from "@prisma/client"
 import { useToast } from "@/hooks/use-toast"
-import { Plus, X } from "lucide-react"
+import { LayoutDashboard, Briefcase, GraduationCap, LogOut, Plus, X, ArrowLeft, ArrowRight } from "lucide-react"
+import { DashboardLayout } from "@/components/dashboard-layout"
 
 const PROGRAM_TYPES = Object.values(ProgramType)
 const REQUIRED_DOCUMENTS_OPTIONS = [
@@ -245,502 +246,547 @@ export default function NewOpleidingPage() {
     )
   }
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <Link href={dashboardUrl}>
-          <Button variant="ghost" className="mb-4">← Back to Dashboard</Button>
-        </Link>
+  const totalSteps = 5
 
-        <Card className="border-0 shadow-lg">
-          <CardHeader>
-            <CardTitle className="text-2xl">Create New Opleiding</CardTitle>
-            <CardDescription>Step {currentStep} of 5</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {error && (
-                <div className="bg-gray-100 border border-gray-300 text-gray-600 px-4 py-3 rounded">
-                  {error}
+  const getLinks = (role: string) => {
+    const common = [
+      { label: "Browse Jobs", href: "/jobs", icon: <Briefcase className="text-black h-5 w-5 flex-shrink-0" /> },
+      { label: "Study Abroad", href: "/opleidingen", icon: <GraduationCap className="text-black h-5 w-5 flex-shrink-0" /> },
+    ]
+    const logout = { label: "Logout", href: "/auth/signout", icon: <LogOut className="text-black h-5 w-5 flex-shrink-0" /> }
+
+    if (role === "ADMIN") {
+      return [
+        { label: "Dashboard", href: "/admin", icon: <LayoutDashboard className="text-black h-5 w-5 flex-shrink-0" /> },
+        { label: "Manage Jobs", href: "/admin/jobs", icon: <Briefcase className="text-black h-5 w-5 flex-shrink-0" /> },
+        { label: "Manage Opleidingen", href: "/admin/opleidingen", icon: <GraduationCap className="text-black h-5 w-5 flex-shrink-0" /> },
+        ...common,
+        logout
+      ]
+    }
+    
+    // Ambassador
+    return [
+      { label: "Dashboard", href: "/ambassador", icon: <LayoutDashboard className="text-black h-5 w-5 flex-shrink-0" /> },
+      ...common,
+      logout
+    ]
+  }
+
+  const PageContent = () => (
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <Link href={dashboardUrl}>
+        <Button variant="ghost" className="mb-4">
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back to Dashboard
+        </Button>
+      </Link>
+
+      <Card className="border-0 shadow-lg">
+        <CardHeader>
+          <CardTitle className="text-2xl">Create New Opleiding</CardTitle>
+          <CardDescription>Step {currentStep} of 5</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded whitespace-pre-wrap">
+                {error}
+              </div>
+            )}
+
+            {/* Step 1: Basis Informatie */}
+            {currentStep === 1 && (
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Basis Informatie</h3>
+                <div className="space-y-2">
+                  <Label htmlFor="title">Titel van de opleiding *</Label>
+                  <Input
+                    id="title"
+                    value={formData.title}
+                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                    required
+                  />
                 </div>
-              )}
 
-              {/* Step 1: Basis Informatie */}
-              {currentStep === 1 && (
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">Basis Informatie</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="title">Titel van de opleiding *</Label>
+                    <Label htmlFor="partnerCountry">Partnerland *</Label>
                     <Input
-                      id="title"
-                      value={formData.title}
-                      onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                      required
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="partnerCountry">Partnerland *</Label>
-                      <Input
-                        id="partnerCountry"
-                        value={formData.partnerCountry}
-                        onChange={(e) => setFormData({ ...formData, partnerCountry: e.target.value })}
-                        placeholder="bijv. Zweden, Portugal, Canada"
-                        required
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="partnerSchool">Partner-school naam *</Label>
-                      <Input
-                        id="partnerSchool"
-                        value={formData.partnerSchool}
-                        onChange={(e) => setFormData({ ...formData, partnerSchool: e.target.value })}
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="shortDescription">Korte toelichting *</Label>
-                    <Textarea
-                      id="shortDescription"
-                      value={formData.shortDescription}
-                      onChange={(e) => setFormData({ ...formData, shortDescription: e.target.value })}
-                      rows={3}
-                      required
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="longDescription">Uitgebreide omschrijving *</Label>
-                    <Textarea
-                      id="longDescription"
-                      value={formData.longDescription}
-                      onChange={(e) => setFormData({ ...formData, longDescription: e.target.value })}
-                      rows={6}
-                      required
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="category">Categorie *</Label>
-                      <Input
-                        id="category"
-                        value={formData.category}
-                        onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                        placeholder="bijv. ICT, Zorg, Engineering"
-                        required
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="programType">Type opleiding *</Label>
-                      <Select
-                        value={formData.programType}
-                        onValueChange={(value) => setFormData({ ...formData, programType: value as ProgramType })}
-                        required
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select type" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {PROGRAM_TYPES.map((type) => (
-                            <SelectItem key={type} value={type}>
-                              {type.replace(/_/g, " ")}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Step 2: School & Land Informatie */}
-              {currentStep === 2 && (
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">School & Land Informatie</h3>
-                  <div className="space-y-2">
-                    <Label htmlFor="schoolAddress">School adres</Label>
-                    <Textarea
-                      id="schoolAddress"
-                      value={formData.schoolAddress}
-                      onChange={(e) => setFormData({ ...formData, schoolAddress: e.target.value })}
-                      rows={2}
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="schoolCity">Stad</Label>
-                      <Input
-                        id="schoolCity"
-                        value={formData.schoolCity}
-                        onChange={(e) => setFormData({ ...formData, schoolCity: e.target.value })}
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="schoolCountry">Land</Label>
-                      <Input
-                        id="schoolCountry"
-                        value={formData.schoolCountry}
-                        onChange={(e) => setFormData({ ...formData, schoolCountry: e.target.value })}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="schoolWebsite">Website URL</Label>
-                    <Input
-                      id="schoolWebsite"
-                      type="url"
-                      value={formData.schoolWebsite}
-                      onChange={(e) => setFormData({ ...formData, schoolWebsite: e.target.value })}
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="schoolEmail">Contact email</Label>
-                      <Input
-                        id="schoolEmail"
-                        type="email"
-                        value={formData.schoolEmail}
-                        onChange={(e) => setFormData({ ...formData, schoolEmail: e.target.value })}
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="schoolPhone">Contact telefoon</Label>
-                      <Input
-                        id="schoolPhone"
-                        value={formData.schoolPhone}
-                        onChange={(e) => setFormData({ ...formData, schoolPhone: e.target.value })}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="admissionRequirements">Toelatingseisen *</Label>
-                    <Textarea
-                      id="admissionRequirements"
-                      value={formData.admissionRequirements}
-                      onChange={(e) => setFormData({ ...formData, admissionRequirements: e.target.value })}
-                      rows={6}
-                      required
-                    />
-                  </div>
-                </div>
-              )}
-
-              {/* Step 3: Studie Details */}
-              {currentStep === 3 && (
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">Studie Details</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="studyDurationYears">Studieduur in jaren</Label>
-                      <Input
-                        id="studyDurationYears"
-                        type="number"
-                        min="1"
-                        value={formData.studyDurationYears}
-                        onChange={(e) => setFormData({ ...formData, studyDurationYears: e.target.value })}
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="startDate">Startdatum</Label>
-                      <Input
-                        id="startDate"
-                        type="date"
-                        value={formData.startDate}
-                        onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="language">Taal van de opleiding *</Label>
-                      <Input
-                        id="language"
-                        value={formData.language}
-                        onChange={(e) => setFormData({ ...formData, language: e.target.value })}
-                        placeholder="Nederlands/Engels/anders"
-                        required
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="tuitionFeeYear">Collegegeld per jaar</Label>
-                      <Input
-                        id="tuitionFeeYear"
-                        type="number"
-                        step="0.01"
-                        value={formData.tuitionFeeYear}
-                        onChange={(e) => setFormData({ ...formData, tuitionFeeYear: e.target.value })}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="scholarships">Eventuele beurzen of subsidies</Label>
-                    <Textarea
-                      id="scholarships"
-                      value={formData.scholarships}
-                      onChange={(e) => setFormData({ ...formData, scholarships: e.target.value })}
-                      rows={3}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>Benodigde documenten voor aanmelding</Label>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                      {REQUIRED_DOCUMENTS_OPTIONS.map((doc) => (
-                        <div key={doc} className="flex items-center space-x-2">
-                          <Checkbox
-                            id={doc}
-                            checked={formData.requiredDocuments.includes(doc)}
-                            onCheckedChange={() => toggleRequiredDocument(doc)}
-                          />
-                          <Label htmlFor={doc} className="text-sm font-normal cursor-pointer">
-                            {doc}
-                          </Label>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Step 4: Application Process */}
-              {currentStep === 4 && (
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">Application Process</h3>
-                  <div className="space-y-2">
-                    <Label htmlFor="applicationDeadline">Deadline voor aanmelding</Label>
-                    <Input
-                      id="applicationDeadline"
-                      type="date"
-                      value={formData.applicationDeadline}
-                      onChange={(e) => setFormData({ ...formData, applicationDeadline: e.target.value })}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="processingTime">Verwachte verwerkingstijd</Label>
-                    <Input
-                      id="processingTime"
-                      value={formData.processingTime}
-                      onChange={(e) => setFormData({ ...formData, processingTime: e.target.value })}
-                      placeholder="bijv. 4-8 weken"
-                    />
-                  </div>
-
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="interviewRequired"
-                      checked={formData.interviewRequired}
-                      onCheckedChange={(checked) =>
-                        setFormData({ ...formData, interviewRequired: checked as boolean })
-                      }
-                    />
-                    <Label htmlFor="interviewRequired" className="cursor-pointer">
-                      Interview verplicht?
-                    </Label>
-                  </div>
-
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="intakeFormRequired"
-                      checked={formData.intakeFormRequired}
-                      onCheckedChange={(checked) =>
-                        setFormData({ ...formData, intakeFormRequired: checked as boolean })
-                      }
-                    />
-                    <Label htmlFor="intakeFormRequired" className="cursor-pointer">
-                      Intake formulier nodig?
-                    </Label>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>Eventuele extra tests (IELTS, TOEFL, etc.)</Label>
-                    <div className="flex gap-2">
-                      <Input
-                        value={newTest}
-                        onChange={(e) => setNewTest(e.target.value)}
-                        onKeyPress={(e) => e.key === "Enter" && (e.preventDefault(), addTest())}
-                        placeholder="Voeg test toe"
-                      />
-                      <Button type="button" onClick={addTest} variant="outline">
-                        <Plus className="h-4 w-4" />
-                      </Button>
-                    </div>
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      {formData.additionalTests.map((test) => (
-                        <span
-                          key={test}
-                          className="px-2 py-1 bg-gray-100 text-gray-600 rounded text-sm flex items-center gap-1"
-                        >
-                          {test}
-                          <button
-                            type="button"
-                            onClick={() => removeTest(test)}
-                            className="hover:text-gray-600"
-                          >
-                            <X className="h-3 w-3" />
-                          </button>
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Step 5: Media & Extra */}
-              {currentStep === 5 && (
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">Media & Extra</h3>
-                  <div className="space-y-2">
-                    <Label htmlFor="thumbnailUrl">Thumbnail foto URL *</Label>
-                    <Input
-                      id="thumbnailUrl"
-                      type="url"
-                      value={formData.thumbnailUrl}
-                      onChange={(e) => setFormData({ ...formData, thumbnailUrl: e.target.value })}
+                      id="partnerCountry"
+                      value={formData.partnerCountry}
+                      onChange={(e) => setFormData({ ...formData, partnerCountry: e.target.value })}
+                      placeholder="bijv. Zweden, Portugal, Canada"
                       required
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="bannerUrl">Banner afbeelding URL</Label>
+                    <Label htmlFor="partnerSchool">Partner-school naam *</Label>
                     <Input
-                      id="bannerUrl"
-                      type="url"
-                      value={formData.bannerUrl}
-                      onChange={(e) => setFormData({ ...formData, bannerUrl: e.target.value })}
+                      id="partnerSchool"
+                      value={formData.partnerSchool}
+                      onChange={(e) => setFormData({ ...formData, partnerSchool: e.target.value })}
+                      required
                     />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="promoVideoUrl">Promo video URL</Label>
-                    <Input
-                      id="promoVideoUrl"
-                      type="url"
-                      value={formData.promoVideoUrl}
-                      onChange={(e) => setFormData({ ...formData, promoVideoUrl: e.target.value })}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>Tags</Label>
-                    <div className="flex gap-2">
-                      <Input
-                        value={newTag}
-                        onChange={(e) => setNewTag(e.target.value)}
-                        onKeyPress={(e) => e.key === "Enter" && (e.preventDefault(), addTag())}
-                        placeholder="Voeg tag toe"
-                      />
-                      <Button type="button" onClick={addTag} variant="outline">
-                        <Plus className="h-4 w-4" />
-                      </Button>
-                    </div>
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      {formData.tags.map((tag) => (
-                        <span
-                          key={tag}
-                          className="px-2 py-1 bg-gray-100 text-gray-800 rounded text-sm flex items-center gap-1"
-                        >
-                          {tag}
-                          <button
-                            type="button"
-                            onClick={() => removeTag(tag)}
-                            className="hover:text-gray-600"
-                          >
-                            <X className="h-3 w-3" />
-                          </button>
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>Documenten (PDF URLs)</Label>
-                    <div className="flex gap-2">
-                      <Input
-                        type="url"
-                        value={newDocument}
-                        onChange={(e) => setNewDocument(e.target.value)}
-                        onKeyPress={(e) => e.key === "Enter" && (e.preventDefault(), addDocument())}
-                        placeholder="Voeg document URL toe"
-                      />
-                      <Button type="button" onClick={addDocument} variant="outline">
-                        <Plus className="h-4 w-4" />
-                      </Button>
-                    </div>
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      {formData.documents.map((doc) => (
-                        <span
-                          key={doc}
-                          className="px-2 py-1 bg-gray-100 text-gray-600 rounded text-sm flex items-center gap-1"
-                        >
-                          {doc.substring(0, 30)}...
-                          <button
-                            type="button"
-                            onClick={() => removeDocument(doc)}
-                            className="hover:text-gray-600"
-                          >
-                            <X className="h-3 w-3" />
-                          </button>
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="isVisible"
-                      checked={formData.isVisible}
-                      onCheckedChange={(checked) =>
-                        setFormData({ ...formData, isVisible: checked as boolean })
-                      }
-                    />
-                    <Label htmlFor="isVisible" className="cursor-pointer">
-                      Is zichtbaar op de website
-                    </Label>
                   </div>
                 </div>
-              )}
 
-              <div className="flex justify-between gap-4 pt-4 border-t">
-                <div>
-                  {currentStep > 1 && (
-                    <Button type="button" variant="outline" onClick={prevStep}>
-                      Previous
-                    </Button>
-                  )}
+                <div className="space-y-2">
+                  <Label htmlFor="shortDescription">Korte toelichting *</Label>
+                  <Textarea
+                    id="shortDescription"
+                    value={formData.shortDescription}
+                    onChange={(e) => setFormData({ ...formData, shortDescription: e.target.value })}
+                    rows={3}
+                    required
+                  />
                 </div>
-                <div className="flex gap-2">
-                  {currentStep < 5 ? (
-                    <Button type="button" onClick={nextStep} className="bg-gradient-to-r from-gray-800 to-black hover:from-gray-800 hover:to-black">
-                      Next
-                    </Button>
-                  ) : (
-                    <Button type="submit" disabled={loading} className="bg-gradient-to-r from-gray-800 to-black hover:from-gray-800 hover:to-black">
-                      {loading ? "Creating..." : "Create Opleiding"}
-                    </Button>
-                  )}
+
+                <div className="space-y-2">
+                  <Label htmlFor="longDescription">Uitgebreide omschrijving *</Label>
+                  <Textarea
+                    id="longDescription"
+                    value={formData.longDescription}
+                    onChange={(e) => setFormData({ ...formData, longDescription: e.target.value })}
+                    rows={6}
+                    required
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="category">Categorie *</Label>
+                    <Input
+                      id="category"
+                      value={formData.category}
+                      onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                      placeholder="bijv. ICT, Zorg, Engineering"
+                      required
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="programType">Type opleiding *</Label>
+                    <Select
+                      value={formData.programType}
+                      onValueChange={(value) => setFormData({ ...formData, programType: value as ProgramType })}
+                      required
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {PROGRAM_TYPES.map((type) => (
+                          <SelectItem key={type} value={type}>
+                            {type.replace(/_/g, " ")}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
               </div>
-            </form>
-          </CardContent>
-        </Card>
-      </div>
+            )}
+
+            {/* Step 2: School & Land Informatie */}
+            {currentStep === 2 && (
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">School & Land Informatie</h3>
+                <div className="space-y-2">
+                  <Label htmlFor="schoolAddress">School adres</Label>
+                  <Textarea
+                    id="schoolAddress"
+                    value={formData.schoolAddress}
+                    onChange={(e) => setFormData({ ...formData, schoolAddress: e.target.value })}
+                    rows={2}
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="schoolCity">Stad</Label>
+                    <Input
+                      id="schoolCity"
+                      value={formData.schoolCity}
+                      onChange={(e) => setFormData({ ...formData, schoolCity: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="schoolCountry">Land</Label>
+                    <Input
+                      id="schoolCountry"
+                      value={formData.schoolCountry}
+                      onChange={(e) => setFormData({ ...formData, schoolCountry: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="schoolWebsite">Website URL</Label>
+                  <Input
+                    id="schoolWebsite"
+                    type="url"
+                    value={formData.schoolWebsite}
+                    onChange={(e) => setFormData({ ...formData, schoolWebsite: e.target.value })}
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="schoolEmail">Contact email</Label>
+                    <Input
+                      id="schoolEmail"
+                      type="email"
+                      value={formData.schoolEmail}
+                      onChange={(e) => setFormData({ ...formData, schoolEmail: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="schoolPhone">Contact telefoon</Label>
+                    <Input
+                      id="schoolPhone"
+                      value={formData.schoolPhone}
+                      onChange={(e) => setFormData({ ...formData, schoolPhone: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="admissionRequirements">Toelatingseisen *</Label>
+                  <Textarea
+                    id="admissionRequirements"
+                    value={formData.admissionRequirements}
+                    onChange={(e) => setFormData({ ...formData, admissionRequirements: e.target.value })}
+                    rows={6}
+                    required
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Step 3: Studie Details */}
+            {currentStep === 3 && (
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Studie Details</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="studyDurationYears">Studieduur in jaren</Label>
+                    <Input
+                      id="studyDurationYears"
+                      type="number"
+                      min="1"
+                      value={formData.studyDurationYears}
+                      onChange={(e) => setFormData({ ...formData, studyDurationYears: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="startDate">Startdatum</Label>
+                    <Input
+                      id="startDate"
+                      type="date"
+                      value={formData.startDate}
+                      onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="language">Taal van de opleiding *</Label>
+                    <Input
+                      id="language"
+                      value={formData.language}
+                      onChange={(e) => setFormData({ ...formData, language: e.target.value })}
+                      placeholder="Nederlands/Engels/anders"
+                      required
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="tuitionFeeYear">Collegegeld per jaar</Label>
+                    <Input
+                      id="tuitionFeeYear"
+                      type="number"
+                      step="0.01"
+                      value={formData.tuitionFeeYear}
+                      onChange={(e) => setFormData({ ...formData, tuitionFeeYear: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="scholarships">Eventuele beurzen of subsidies</Label>
+                  <Textarea
+                    id="scholarships"
+                    value={formData.scholarships}
+                    onChange={(e) => setFormData({ ...formData, scholarships: e.target.value })}
+                    rows={3}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Benodigde documenten voor aanmelding</Label>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                    {REQUIRED_DOCUMENTS_OPTIONS.map((doc) => (
+                      <div key={doc} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={doc}
+                          checked={formData.requiredDocuments.includes(doc)}
+                          onCheckedChange={() => toggleRequiredDocument(doc)}
+                        />
+                        <Label htmlFor={doc} className="text-sm font-normal cursor-pointer">
+                          {doc}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Step 4: Application Process */}
+            {currentStep === 4 && (
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Application Process</h3>
+                <div className="space-y-2">
+                  <Label htmlFor="applicationDeadline">Deadline voor aanmelding</Label>
+                  <Input
+                    id="applicationDeadline"
+                    type="date"
+                    value={formData.applicationDeadline}
+                    onChange={(e) => setFormData({ ...formData, applicationDeadline: e.target.value })}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="processingTime">Verwachte verwerkingstijd</Label>
+                  <Input
+                    id="processingTime"
+                    value={formData.processingTime}
+                    onChange={(e) => setFormData({ ...formData, processingTime: e.target.value })}
+                    placeholder="bijv. 4-8 weken"
+                  />
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="interviewRequired"
+                    checked={formData.interviewRequired}
+                    onCheckedChange={(checked) =>
+                      setFormData({ ...formData, interviewRequired: checked as boolean })
+                    }
+                  />
+                  <Label htmlFor="interviewRequired" className="cursor-pointer">
+                    Interview verplicht?
+                  </Label>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="intakeFormRequired"
+                    checked={formData.intakeFormRequired}
+                    onCheckedChange={(checked) =>
+                      setFormData({ ...formData, intakeFormRequired: checked as boolean })
+                    }
+                  />
+                  <Label htmlFor="intakeFormRequired" className="cursor-pointer">
+                    Intake formulier nodig?
+                  </Label>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Eventuele extra tests (IELTS, TOEFL, etc.)</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      value={newTest}
+                      onChange={(e) => setNewTest(e.target.value)}
+                      onKeyPress={(e) => e.key === "Enter" && (e.preventDefault(), addTest())}
+                      placeholder="Voeg test toe"
+                    />
+                    <Button type="button" onClick={addTest} variant="outline">
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {formData.additionalTests.map((test) => (
+                      <span
+                        key={test}
+                        className="px-2 py-1 bg-gray-100 text-gray-600 rounded text-sm flex items-center gap-1"
+                      >
+                        {test}
+                        <button
+                          type="button"
+                          onClick={() => removeTest(test)}
+                          className="hover:text-gray-600"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Step 5: Media & Extra */}
+            {currentStep === 5 && (
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Media & Extra</h3>
+                <div className="space-y-2">
+                  <Label htmlFor="thumbnailUrl">Thumbnail foto URL *</Label>
+                  <Input
+                    id="thumbnailUrl"
+                    type="url"
+                    value={formData.thumbnailUrl}
+                    onChange={(e) => setFormData({ ...formData, thumbnailUrl: e.target.value })}
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="bannerUrl">Banner afbeelding URL</Label>
+                  <Input
+                    id="bannerUrl"
+                    type="url"
+                    value={formData.bannerUrl}
+                    onChange={(e) => setFormData({ ...formData, bannerUrl: e.target.value })}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="promoVideoUrl">Promo video URL</Label>
+                  <Input
+                    id="promoVideoUrl"
+                    type="url"
+                    value={formData.promoVideoUrl}
+                    onChange={(e) => setFormData({ ...formData, promoVideoUrl: e.target.value })}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Tags</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      value={newTag}
+                      onChange={(e) => setNewTag(e.target.value)}
+                      onKeyPress={(e) => e.key === "Enter" && (e.preventDefault(), addTag())}
+                      placeholder="Voeg tag toe"
+                    />
+                    <Button type="button" onClick={addTag} variant="outline">
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {formData.tags.map((tag) => (
+                      <span
+                        key={tag}
+                        className="px-2 py-1 bg-gray-100 text-gray-800 rounded text-sm flex items-center gap-1"
+                      >
+                        {tag}
+                        <button
+                          type="button"
+                          onClick={() => removeTag(tag)}
+                          className="hover:text-gray-600"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Documenten (PDF URLs)</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      type="url"
+                      value={newDocument}
+                      onChange={(e) => setNewDocument(e.target.value)}
+                      onKeyPress={(e) => e.key === "Enter" && (e.preventDefault(), addDocument())}
+                      placeholder="Voeg document URL toe"
+                    />
+                    <Button type="button" onClick={addDocument} variant="outline">
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {formData.documents.map((doc) => (
+                      <span
+                        key={doc}
+                        className="px-2 py-1 bg-gray-100 text-gray-600 rounded text-sm flex items-center gap-1"
+                      >
+                        {doc.substring(0, 30)}...
+                        <button
+                          type="button"
+                          onClick={() => removeDocument(doc)}
+                          className="hover:text-gray-600"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="flex items-center space-x-2 pt-4">
+                  <Checkbox
+                    id="isVisible"
+                    checked={formData.isVisible}
+                    onCheckedChange={(checked) =>
+                      setFormData({ ...formData, isVisible: checked as boolean })
+                    }
+                  />
+                  <Label htmlFor="isVisible" className="cursor-pointer">
+                    Is zichtbaar op de website
+                  </Label>
+                </div>
+              </div>
+            )}
+
+            <div className="flex justify-between gap-4 pt-4 border-t">
+              <div>
+                {currentStep > 1 && (
+                  <Button type="button" variant="outline" onClick={prevStep}>
+                    Previous
+                  </Button>
+                )}
+              </div>
+              <div className="flex gap-2">
+                {currentStep < 5 ? (
+                  <Button type="button" onClick={nextStep} className="bg-gradient-to-r from-gray-800 to-black hover:from-gray-800 hover:to-black">
+                    Next
+                  </Button>
+                ) : (
+                  <Button type="submit" disabled={loading} className="bg-gradient-to-r from-gray-800 to-black hover:from-gray-800 hover:to-black">
+                    {loading ? "Creating..." : "Create Opleiding"}
+                  </Button>
+                )}
+              </div>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
     </div>
   )
+
+  if (session) {
+    return (
+      <DashboardLayout
+        links={getLinks(session.user.role)}
+        user={{
+          name: session.user.name || null,
+          email: session.user.email || "",
+          image: session.user.image || null,
+        }}
+      >
+        <PageContent />
+      </DashboardLayout>
+    )
+  }
+
+  return <PageContent />
 }

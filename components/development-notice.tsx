@@ -74,7 +74,7 @@ export function DevelopmentNotice() {
             onClick={handleDontShowAgain}
             className="w-full sm:w-auto"
           >
-            Don't show again
+            Don&apos;t show again
           </Button>
           <Button
             onClick={handleClose}

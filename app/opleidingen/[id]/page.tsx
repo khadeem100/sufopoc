@@ -5,6 +5,7 @@ import { MapPin, GraduationCap, Clock, Globe, Mail, Phone, Calendar, DollarSign,
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import Link from "next/link"
+import Image from "next/image"
 import { ApplyOpleidingButton } from "@/components/apply-opleiding-button"
 
 export default async function OpleidingDetailPage({ params }: { params: { id: string } }) {
@@ -89,22 +90,24 @@ export default async function OpleidingDetailPage({ params }: { params: { id: st
           <CardContent>
             {/* Banner Image */}
             {opleiding.bannerUrl && (
-              <div className="mb-6 rounded-lg overflow-hidden">
-                <img 
+              <div className="mb-6 rounded-lg overflow-hidden relative h-64">
+                <Image 
                   src={opleiding.bannerUrl} 
                   alt={opleiding.title}
-                  className="w-full h-64 object-cover"
+                  fill
+                  className="object-cover"
                 />
               </div>
             )}
 
             {/* Thumbnail */}
             {opleiding.thumbnailUrl && !opleiding.bannerUrl && (
-              <div className="mb-6 rounded-lg overflow-hidden">
-                <img 
+              <div className="mb-6 rounded-lg overflow-hidden relative h-64">
+                <Image 
                   src={opleiding.thumbnailUrl} 
                   alt={opleiding.title}
-                  className="w-full h-64 object-cover"
+                  fill
+                  className="object-cover"
                 />
               </div>
             )}

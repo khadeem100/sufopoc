@@ -1,25 +1,19 @@
 "use client"
 
-import { Badge } from "@/components/ui/badge"
-import {
-  Card,
-  CardHeader,
-  CardContent,
-  CardFooter,
-} from "@/components/ui/card"
-import Image from "next/image"
+import { PlaceCard } from "@/components/ui/place-card"
 import Link from "next/link"
-import { cn } from "@/lib/utils"
-import { MapPin, DollarSign, Briefcase, Calendar, Building2 } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { Button } from "@/components/ui/button"
+import { ArrowRight } from "lucide-react"
 
-export interface JobCardProps {
+interface JobCardProps {
   id: string
   title: string
-  companyName?: string | null
+  companyName: string
   shortDescription?: string | null
   fullDescription?: string | null
   description?: string | null
-  category?: string | null
+  category: string
   jobType?: string | null
   employmentType?: string | null
   city?: string | null
@@ -31,8 +25,8 @@ export interface JobCardProps {
   tags?: string[]
   logoUrl?: string | null
   bannerUrl?: string | null
-  createdAt?: Date | string
-  clampLines?: number
+  createdAt: string | Date
+  manageUrl?: string
 }
 
 export function JobCard({
@@ -51,130 +45,86 @@ export function JobCard({
   salaryMin,
   salaryMax,
   currency,
-  tags,
+  tags = [],
   logoUrl,
   bannerUrl,
   createdAt,
-  clampLines = 3,
+  manageUrl,
 }: JobCardProps) {
-  const cover = bannerUrl || logoUrl || "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=800&h=400&fit=crop"
-  const excerpt = shortDescription || fullDescription || description || "No description available"
-  const displayLocation = city && country ? `${city}, ${country}` : location || "Location not specified"
-  const hasSalary = salaryMin && salaryMax
+  const router = useRouter()
 
-  // Validate URL format
-  const isValidUrl = (url: string) => {
-    try {
-      const parsed = new URL(url)
-      return parsed.protocol === 'http:' || parsed.protocol === 'https:'
-    } catch {
-      return false
-    }
+  // Construct images array - prioritize banner, fallback to logo or placeholders
+  const images: string[] = []
+  if (bannerUrl) images.push(bannerUrl)
+  if (logoUrl) images.push(logoUrl)
+  if (images.length === 0) {
+    // Add a default placeholder if no images
+    images.push("https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?w=800&auto=format&fit=crop&q=60")
   }
 
-  const imageSrc = cover && isValidUrl(cover) ? cover : "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=800&h=400&fit=crop"
+  // Construct tags
+  const displayTags = [category]
+  if (jobType) displayTags.push(jobType.replace("-", " "))
+  if (employmentType) displayTags.push(employmentType)
+  if (tags && tags.length > 0) displayTags.push(...tags.slice(0, 2))
 
-  return (
-    <Link href={`/jobs/${id}`}>
-      <Card className="flex w-full max-w-sm flex-col gap-3 overflow-hidden rounded-3xl border p-3 shadow-lg hover:shadow-xl transition-shadow cursor-pointer">
-        {imageSrc && (
-          <CardHeader className="p-0">
-            <div className="relative h-56 w-full">
-              <Image
-                src={imageSrc}
-                alt={title}
-                fill
-                className="rounded-2xl object-cover"
-                unoptimized={!imageSrc.includes('unsplash.com') && !imageSrc.includes('localhost')}
-              />
-            </div>
-          </CardHeader>
-        )}
+  // Construct location string
+  const locationString = city && country ? `${city}, ${country}` : location || "Remote"
 
-        <CardContent className="flex-grow p-3">
-          <div className="mb-4 flex items-center gap-2 flex-wrap">
-            {category && (
-              <Badge className="rounded-full bg-gray-100 px-3 py-1 text-sm text-gray-700 hover:text-black">
-                {category}
-              </Badge>
-            )}
-            {jobType && (
-              <Badge variant="outline" className="rounded-full px-3 py-1 text-sm">
-                {jobType.replace(/-/g, " ")}
-              </Badge>
-            )}
-          </div>
+  // Construct salary string
+  const salaryString = salaryMin && salaryMax 
+    ? `${currency || "€"}${salaryMin.toLocaleString()} - ${salaryMax.toLocaleString()}` 
+    : "Salary not specified"
 
-          <h2 className="mb-2 text-2xl font-bold leading-tight text-card-foreground">
-            {title}
-          </h2>
+  // Description priority
+  const desc = shortDescription || description || fullDescription || ""
 
-          {companyName && (
-            <p className="text-sm text-gray-600 mb-3 font-medium">
-              {companyName}
-            </p>
-          )}
-
-          <div className="space-y-2 mb-3 text-sm text-gray-600">
-            <div className="flex items-center gap-2">
-              <MapPin className="h-4 w-4" />
-              <span>{displayLocation}</span>
-            </div>
-            {employmentType && (
-              <div className="flex items-center gap-2">
-                <Building2 className="h-4 w-4" />
-                <span>{employmentType.replace(/-/g, " ")}</span>
-              </div>
-            )}
-            {hasSalary && (
-              <div className="flex items-center gap-2">
-                <DollarSign className="h-4 w-4" />
-                <span>
-                  {currency || "EUR"} {salaryMin.toLocaleString()} - {salaryMax.toLocaleString()}
-                </span>
-              </div>
-            )}
-          </div>
-
-          <p
-            className={cn("text-gray-600 text-sm", {
-              "overflow-hidden text-ellipsis [-webkit-box-orient:vertical] [display:-webkit-box]":
-                clampLines && clampLines > 0,
-            })}
-            style={{
-              WebkitLineClamp: clampLines,
+  const cardContent = (
+    <PlaceCard
+      images={images}
+      tags={displayTags}
+      title={title}
+      subtitle={companyName}
+      badgeText={locationString}
+      description={desc}
+      footerText={salaryString}
+      actionText="View Job"
+      className="h-full max-w-full"
+      extraActions={manageUrl ? (
+        <div className="flex gap-2">
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              router.push(manageUrl)
             }}
           >
-            {excerpt}
-          </p>
+            Manage
+          </Button>
+          <Link href={`/jobs/${id}`}>
+            <Button className="group" size="sm">
+              View Job
+              <ArrowRight className="h-4 w-4 ml-2 transition-transform group-hover:translate-x-1" />
+            </Button>
+          </Link>
+        </div>
+      ) : undefined}
+    />
+  );
 
-          {tags && tags.length > 0 && (
-            <div className="flex flex-wrap gap-2 mt-3">
-              {tags.slice(0, 3).map((tag, idx) => (
-                <Badge key={idx} variant="outline" className="text-xs">
-                  {tag}
-                </Badge>
-              ))}
-            </div>
-          )}
-        </CardContent>
+  if (manageUrl) {
+    return (
+      <div className="block h-full cursor-pointer" onClick={() => router.push(`/jobs/${id}`)}>
+        {cardContent}
+      </div>
+    );
+  }
 
-        {createdAt && (
-          <CardFooter className="flex items-center justify-end p-3">
-            <div className="text-right">
-              <p className="text-xs text-gray-500">Posted</p>
-              <p className="text-sm font-semibold text-gray-600">
-                {new Date(createdAt).toLocaleDateString("en-US", {
-                  year: "numeric",
-                  month: "short",
-                  day: "numeric",
-                })}
-              </p>
-            </div>
-          </CardFooter>
-        )}
-      </Card>
+  return (
+    <Link href={`/jobs/${id}`} className="block h-full">
+      {cardContent}
     </Link>
-  )
+  );
 }
-
