@@ -83,6 +83,8 @@ model User {
   bio           String?
   region        String?
   isVerified    Boolean   @default(false)
+  verificationCode String?
+  verificationCodeExpires DateTime?
 
   // Relations
   jobsCreated   Job[]     @relation("JobCreator")

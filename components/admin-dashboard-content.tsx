@@ -1,5 +1,10 @@
 "use client"
 
+import { useState } from "react"
+import { useRouter } from "next/navigation"
+import { useToast } from "@/components/ui/use-toast"
+import { Loader2, XCircle } from "lucide-react"
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
@@ -28,7 +33,47 @@ interface AdminDashboardContentProps {
   }
 }
 
+
 export function AdminDashboardContent({ session, links, stats }: AdminDashboardContentProps) {
+  const router = useRouter()
+  const { toast } = useToast()
+  const [processingId, setProcessingId] = useState<string | null>(null)
+
+  const handleAction = async (userId: string, action: "verify" | "decline") => {
+    setProcessingId(userId)
+    try {
+      const formData = new FormData()
+      formData.append("userId", userId)
+      formData.append("action", action)
+
+      const response = await fetch("/api/admin/verify-ambassador", {
+        method: "POST",
+        body: formData,
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || "Action failed")
+      }
+
+      toast({
+        title: action === "verify" ? "Verification Email Sent" : "Application Declined",
+        description: data.message,
+      })
+      
+      router.refresh()
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      })
+    } finally {
+      setProcessingId(null)
+    }
+  }
+
   return (
     <DashboardLayout
       links={links}
@@ -39,76 +84,7 @@ export function AdminDashboardContent({ session, links, stats }: AdminDashboardC
       }}
     >
       <div className="w-full">
-        {/* Header */}
-        <div className="mb-8">
-          <h2 className="text-4xl font-bold text-black">
-            Admin Dashboard
-          </h2>
-          <p className="text-gray-600 mt-2 text-lg">Manage and monitor your platform</p>
-        </div>
-
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 bg-black">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-sm font-medium text-white">Total Users</CardTitle>
-                <div className="p-2 bg-white/10 rounded-lg">
-                  <Users className="h-5 w-5 text-white" />
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-4xl font-bold text-white">{stats.users}</div>
-              <p className="text-xs text-white mt-1">Active accounts</p>
-            </CardContent>
-          </Card>
-
-          <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 bg-black">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-sm font-medium text-white">Total Jobs</CardTitle>
-                <div className="p-2 bg-white/10 rounded-lg">
-                  <Briefcase className="h-5 w-5 text-white" />
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-4xl font-bold text-white">{stats.jobs}</div>
-              <p className="text-xs text-white mt-1">Job postings</p>
-            </CardContent>
-          </Card>
-
-          <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 bg-black">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-sm font-medium text-white">Opleidingen</CardTitle>
-                <div className="p-2 bg-white/10 rounded-lg">
-                  <GraduationCap className="h-5 w-5 text-white" />
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-4xl font-bold text-white">{stats.opleidingen}</div>
-              <p className="text-xs text-white mt-1">Study abroad programs</p>
-            </CardContent>
-          </Card>
-
-          <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 bg-black">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-sm font-medium text-white">Applications</CardTitle>
-                <div className="p-2 bg-white/10 rounded-lg">
-                  <FileText className="h-5 w-5 text-white" />
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-4xl font-bold text-white">{stats.applications}</div>
-              <p className="text-xs text-white mt-1">Total submissions</p>
-            </CardContent>
-          </Card>
-        </div>
+        {/* ... existing header and stats grid ... */}
 
         {/* Pending Ambassadors Alert */}
         {stats.pendingAmbassadors.length > 0 && (
@@ -129,7 +105,7 @@ export function AdminDashboardContent({ session, links, stats }: AdminDashboardC
             <CardContent>
               <div className="space-y-3">
                 {stats.pendingAmbassadors.map((ambassador) => (
-                  <div key={ambassador.id} className="flex justify-between items-center p-4 bg-white/60 rounded-lg border border-gray-300/50">
+                  <div key={ambassador.id} className="flex flex-col md:flex-row justify-between items-start md:items-center p-4 bg-white/60 rounded-lg border border-gray-300/50 gap-4">
                     <div>
                       <h4 className="font-semibold text-gray-900">{ambassador.name}</h4>
                       <p className="text-sm text-gray-600">{ambassador.email}</p>
@@ -137,13 +113,31 @@ export function AdminDashboardContent({ session, links, stats }: AdminDashboardC
                         <p className="text-sm text-gray-500 mt-1">📍 {ambassador.region}</p>
                       )}
                     </div>
-                    <form action="/api/admin/verify-ambassador" method="POST">
-                      <input type="hidden" name="userId" value={ambassador.id} />
-                      <Button type="submit" size="sm" className="bg-black hover:bg-gray-800">
-                        <CheckCircle className="mr-2 h-4 w-4" />
+                    <div className="flex items-center gap-2 w-full md:w-auto">
+                      <Button 
+                        onClick={() => handleAction(ambassador.id, "decline")}
+                        variant="destructive"
+                        size="sm"
+                        disabled={processingId === ambassador.id}
+                        className="flex-1 md:flex-none"
+                      >
+                        <XCircle className="mr-2 h-4 w-4" />
+                        Decline
+                      </Button>
+                      <Button 
+                        onClick={() => handleAction(ambassador.id, "verify")}
+                        size="sm" 
+                        disabled={processingId === ambassador.id}
+                        className="bg-black hover:bg-gray-800 flex-1 md:flex-none"
+                      >
+                        {processingId === ambassador.id ? (
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        ) : (
+                          <CheckCircle className="mr-2 h-4 w-4" />
+                        )}
                         Verify
                       </Button>
-                    </form>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -151,7 +145,8 @@ export function AdminDashboardContent({ session, links, stats }: AdminDashboardC
           </Card>
         )}
 
-        {/* Quick Actions */}
+        {/* ... existing quick actions ... */}
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <Card className="border-0 shadow-md hover:shadow-xl transition-all duration-300 group">
             <CardHeader>
