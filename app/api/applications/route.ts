@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { z } from "zod"
+import { sendEmail, sendAdminNotification } from "@/lib/mail"
 
 const applicationSchema = z.object({
   jobId: z.string().optional(),
@@ -68,7 +69,28 @@ export async function POST(req: Request) {
         coverLetter: validatedData.coverLetter,
         status: "SUBMITTED",
       },
+      include: {
+        job: { select: { title: true } },
+        opleiding: { select: { title: true } },
+        user: { select: { email: true, name: true } },
+      },
     })
+
+    const positionTitle = application.job?.title || application.opleiding?.title || "Unknown Position"
+    const type = application.job ? "Job" : "Program"
+
+    // Notify User
+    await sendEmail({
+      to: application.user.email,
+      subject: `Application Received: ${positionTitle}`,
+      text: `Hi ${application.user.name || "there"},\n\nWe have received your application for ${positionTitle}. We will review it and get back to you soon.\n\nBest regards,\nThe Team`,
+    })
+
+    // Notify Admin
+    await sendAdminNotification(
+      `New Application: ${positionTitle}`,
+      `New application received for ${positionTitle} (${type}).\n\nApplicant: ${application.user.name}\nEmail: ${application.user.email}\n\nCover Letter:\n${application.coverLetter}`
+    )
 
     return NextResponse.json(application, { status: 201 })
   } catch (error) {

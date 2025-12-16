@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import bcrypt from "bcryptjs"
 import { z } from "zod"
+import { sendEmail, sendAdminNotification } from "@/lib/mail"
 
 const signupSchema = z.object({
   name: z.string().min(1),
@@ -39,6 +40,19 @@ export async function POST(req: Request) {
         role: validatedData.role,
       },
     })
+
+    // Send welcome email
+    await sendEmail({
+      to: user.email,
+      subject: "Welcome to Sufopoc!",
+      text: `Hi ${user.name},\n\nWelcome to Sufopoc! We are excited to have you on board.\n\nYour account has been created successfully.\n\nBest regards,\nThe Team`,
+    })
+
+    // Notify admin
+    await sendAdminNotification(
+      "New User Signup",
+      `New user registered:\nName: ${user.name}\nEmail: ${user.email}\nRole: ${user.role}`
+    )
 
     return NextResponse.json(
       { message: "User created successfully", userId: user.id },

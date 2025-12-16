@@ -23,6 +23,7 @@ enum ApplicationStatus {
   INTERVIEW
   ACCEPTED
   REJECTED
+  REQUEST_INFO
 }
 
 enum JobType {

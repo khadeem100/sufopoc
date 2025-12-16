@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { z } from "zod"
+import { sendAdminNotification } from "@/lib/mail"
 
 const bugReportSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -20,7 +21,6 @@ export async function POST(req: Request) {
     const referer = req.headers.get("referer") || "Unknown"
     const timestamp = new Date().toISOString()
 
-    // Format the email content
     const emailBody = `
 Bug Report Submitted
 
@@ -40,55 +40,8 @@ Additional Information:
 - User Agent: ${userAgent}
 `
 
-    const emailSubject = `Bug Report: ${title}`
-    const recipientEmail = "khadeemsmarty@gmail.com"
+    await sendAdminNotification(`Bug Report: ${title}`, emailBody)
 
-    // Try to send email using Resend API (recommended for production)
-    if (process.env.RESEND_API_KEY) {
-      try {
-        const emailResponse = await fetch("https://api.resend.com/emails", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
-          },
-          body: JSON.stringify({
-            from: process.env.RESEND_FROM_EMAIL || "Bug Reports <onboarding@resend.dev>",
-            to: [recipientEmail],
-            subject: emailSubject,
-            text: emailBody,
-          }),
-        })
-
-        if (emailResponse.ok) {
-          return NextResponse.json({
-            success: true,
-            message: "Bug report submitted successfully",
-          })
-        }
-      } catch (error) {
-        console.error("Resend API error:", error)
-      }
-    }
-
-    // Fallback: Log to console (for development)
-    // In production, configure RESEND_API_KEY in your .env file
-    console.log("=== BUG REPORT ===")
-    console.log(`To: ${recipientEmail}`)
-    console.log(`Subject: ${emailSubject}`)
-    console.log(emailBody)
-    console.log("==================")
-
-    if (!process.env.RESEND_API_KEY) {
-      console.warn(
-        "⚠️  RESEND_API_KEY not configured. Bug reports are logged to console only.\n" +
-        "To enable email sending, add RESEND_API_KEY to your .env file.\n" +
-        "Get your API key from: https://resend.com/api-keys"
-      )
-    }
-
-    // Return success even if email service is not configured
-    // (bug report is logged to console)
     return NextResponse.json({
       success: true,
       message: "Bug report submitted successfully",
