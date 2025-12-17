@@ -26,6 +26,11 @@ export default withAuth(
         return NextResponse.redirect(new URL("/", req.url))
       }
 
+      // Business routes
+      if (path.startsWith("/business") && role as string !== "BUSINESS" && role as string !== "ADMIN") {
+        return NextResponse.redirect(new URL("/", req.url))
+      }
+
       // Student/Expert routes (both can access)
       if ((path.startsWith("/student") || path.startsWith("/expert")) && 
           role !== "STUDENT" && role !== "EXPERT" && role !== "ADMIN") {

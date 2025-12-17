@@ -34,6 +34,11 @@ export default async function AdminDashboard() {
       icon: <LayoutDashboard className="text-black h-5 w-5 flex-shrink-0" />,
     },
     {
+      label: "Business Management",
+      href: "/admin/business",
+      icon: <Briefcase className="text-black h-5 w-5 flex-shrink-0" />,
+    },
+    {
       label: "Applications",
       href: "/admin/applications",
       icon: <FileText className="text-black h-5 w-5 flex-shrink-0" />,

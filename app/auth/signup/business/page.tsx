@@ -8,15 +8,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 
-export default function SignUpPage() {
+export default function BusinessSignUpPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [formData, setFormData] = useState({
@@ -24,20 +17,14 @@ export default function SignUpPage() {
     email: "",
     password: "",
     confirmPassword: "",
-    role: "STUDENT",
+    companyName: "",
+    companyWebsite: "",
+    role: "BUSINESS",
   })
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
   
   const callbackUrl = searchParams.get("callbackUrl") || null
-  const roleParam = searchParams.get("role")
-  
-  // Set role from URL parameter if provided
-  useEffect(() => {
-    if (roleParam && ["STUDENT", "EXPERT", "AMBASSADOR"].includes(roleParam)) {
-      setFormData(prev => ({ ...prev, role: roleParam }))
-    }
-  }, [roleParam])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -53,6 +40,11 @@ export default function SignUpPage() {
       return
     }
 
+    if (!formData.companyName) {
+      setError("Company name is required")
+      return
+    }
+
     setLoading(true)
 
     try {
@@ -63,7 +55,9 @@ export default function SignUpPage() {
           name: formData.name,
           email: formData.email,
           password: formData.password,
-          role: formData.role,
+          role: "BUSINESS",
+          companyName: formData.companyName,
+          companyWebsite: formData.companyWebsite,
         }),
       })
 
@@ -88,17 +82,8 @@ export default function SignUpPage() {
         return
       }
 
-      // If there's a callback URL, redirect there after onboarding
-      // Otherwise, go to onboarding
-      if (callbackUrl) {
-        // Store callback URL in sessionStorage to redirect after onboarding
-        if (typeof window !== "undefined") {
-          sessionStorage.setItem("onboardingCallbackUrl", callbackUrl)
-        }
-      }
-      
-      // Redirect to onboarding
-      router.push(`/onboarding/${formData.role.toLowerCase()}`)
+      // Redirect to thank you page for business users
+      router.push(`/auth/signup/business/thank-you`)
       router.refresh()
     } catch (error) {
       setError("Something went wrong. Please try again.")
@@ -110,9 +95,9 @@ export default function SignUpPage() {
     <div className="min-h-screen flex items-center justify-center bg-white px-4">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle className="text-2xl text-center">Create Account</CardTitle>
+          <CardTitle className="text-2xl text-center">Business Account</CardTitle>
           <CardDescription className="text-center">
-            Sign up to get started on your career journey
+            Sign up to post jobs and showcase your company
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -134,31 +119,36 @@ export default function SignUpPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">Work Email</Label>
               <Input
                 id="email"
                 type="email"
-                placeholder="you@example.com"
+                placeholder="you@company.com"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 required
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="role">I am a</Label>
-              <Select
-                value={formData.role}
-                onValueChange={(value) => setFormData({ ...formData, role: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select your role" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="STUDENT">Student</SelectItem>
-                  <SelectItem value="EXPERT">Expert</SelectItem>
-                  <SelectItem value="AMBASSADOR">Ambassador</SelectItem>
-                </SelectContent>
-              </Select>
+              <Label htmlFor="companyName">Company Name</Label>
+              <Input
+                id="companyName"
+                type="text"
+                placeholder="Company Inc."
+                value={formData.companyName}
+                onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="companyWebsite">Company Website</Label>
+              <Input
+                id="companyWebsite"
+                type="url"
+                placeholder="https://company.com"
+                value={formData.companyWebsite}
+                onChange={(e) => setFormData({ ...formData, companyWebsite: e.target.value })}
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
@@ -193,18 +183,8 @@ export default function SignUpPage() {
               Sign in
             </Link>
           </div>
-          <div className="mt-4 text-center text-sm text-gray-600">
-            Are you a business looking to post jobs?{" "}
-            <Link 
-              href="/auth/signup/business" 
-              className="text-black underline"
-            >
-              Sign up as a business
-            </Link>
-          </div>
         </CardContent>
       </Card>
     </div>
   )
 }
-
