@@ -34,10 +34,10 @@ export default function BusinessThankYouPage() {
         <CardContent>
           <div className="space-y-4">
             <p className="text-gray-600 text-center">
-              We've received your business registration and sent a notification to our team for verification.
+              We&apos;ve received your business registration and sent a notification to our team for verification.
             </p>
             <p className="text-gray-600 text-center">
-              You'll receive an email once your account has been approved.
+              You&apos;ll receive an email once your account has been approved.
             </p>
             <div className="pt-4">
               <Button asChild className="w-full">

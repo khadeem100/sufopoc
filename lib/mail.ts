@@ -1,6 +1,13 @@
 import { Resend } from "resend"
 
-const resend = new Resend(process.env.RESEND_API_KEY)
+let resend: InstanceType<typeof Resend> | null = null;
+
+function getResendClient() {
+  if (!resend && process.env.RESEND_API_KEY) {
+    resend = new Resend(process.env.RESEND_API_KEY);
+  }
+  return resend;
+}
 
 const ADMIN_EMAIL = "customer@sufopoc.com"
 const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || "noreply@jobs.sufopoc.com"
@@ -21,8 +28,17 @@ export async function sendEmail({ to, subject, text, html }: SendEmailProps) {
     return { success: true }
   }
 
+  const resendClient = getResendClient();
+  if (!resendClient) {
+    console.log("=== EMAIL MOCK (No Resend Client) ===")
+    console.log(`To: ${to}`)
+    console.log(`Subject: ${subject}`)
+    console.log("==================")
+    return { success: true }
+  }
+
   try {
-    const data = await resend.emails.send({
+    const data = await resendClient.emails.send({
       from: FROM_EMAIL,
       to,
       subject,
